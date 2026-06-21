@@ -54,7 +54,8 @@ jobs:
         run: |
           set -euo pipefail
           quorum scan examples/terraform --type repo \
-            --scanners trivy,checkov --format json --output iac.json --offline --quiet
+            --scanners trivy,checkov --format json --output iac.json --offline
+          echo "--- scanner runs ---"; jq -c '.scanners[] | {name,status,findings}' iac.json
           echo "--- corroborated IaC findings ---"
           jq -r '.findings[] | select(.detectionCount > 1)
                  | "\(.severity)\t\(.detectionCount)\t\(.detectedBy | join("+"))\t\(.title)"' iac.json
@@ -68,7 +69,8 @@ jobs:
         run: |
           set -euo pipefail
           quorum scan alpine:3.10 --type image \
-            --scanners trivy,grype --format json --output sca.json --offline --quiet
+            --scanners trivy,grype --format json --output sca.json --offline
+          echo "--- scanner runs ---"; jq -c '.scanners[] | {name,status,findings}' sca.json
           echo "--- corroborated SCA findings ---"
           jq -r '.findings[] | select(.detectionCount > 1)
                  | "\(.severity)\t\(.detectionCount)\t\(.detectedBy | join("+"))\t\(.title)"' sca.json | head -20
