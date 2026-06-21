@@ -1,0 +1,22 @@
+{
+  "matches": [
+    {
+      "vulnerability": {
+        "id": "GHSA-jfh8-c2jp-5v3q",
+        "severity": "Critical",
+        "description": "Log4Shell remote code execution.",
+        "cvss": [ { "metrics": { "baseScore": 10.0 } } ]
+      },
+      "relatedVulnerabilities": [
+        { "id": "CVE-2021-44228" }
+      ],
+      "artifact": {
+        "name": "log4j-core",
+        "version": "2.14.1",
+        "type": "java-archive",
+        "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+      }
+    }
+  ],
+  "descriptor": { "name": "grype", "version": "0.74.0" }
+}

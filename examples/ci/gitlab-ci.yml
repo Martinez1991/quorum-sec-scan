@@ -1,0 +1,19 @@
+# Example: run quorum in GitLab CI. Emits SARIF + JSON artifacts and gates the
+# pipeline on HIGH+ findings via the exit code.
+quorum_scan:
+  stage: test
+  image:
+    name: registry.example.com/quorum/quorum:full # pin by @sha256:... in production
+    entrypoint: [""]
+  script:
+    - quorum scan . --type repo --format sarif --output quorum.sarif --crosswalk /opt/quorum/crosswalk --fail-on high
+    - quorum scan . --type repo --format json  --output quorum.json  --crosswalk /opt/quorum/crosswalk --quiet
+  artifacts:
+    when: always
+    paths:
+      - quorum.sarif
+      - quorum.json
+    reports:
+      # GitLab Ultimate can ingest SARIF-derived reports; otherwise keep as a file artifact.
+      sast: quorum.json
+  allow_failure: false # let --fail-on block the pipeline

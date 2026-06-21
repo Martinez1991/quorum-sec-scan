@@ -1,0 +1,75 @@
+# crosswalk/aws.yaml — canonicalControl agrupa rule-ids equivalentes entre engines.
+# Hub canônico: AVD (Trivy já fala AVD). Mapeia Checkov/KICS -> AVD.
+#
+# AVISO: os números AVD/CKV e UUIDs de KICS abaixo são ILUSTRATIVOS DO FORMATO.
+# Confira contra os catálogos oficiais antes de produção (ver DESIGN §8 e §14).
+
+- canonicalControl: AVD-AWS-0086        # S3 bucket public access block
+  category: public-access
+  cwe: CWE-732
+  title: "S3 bucket sem bloqueio de acesso público"
+  ids:
+    checkov: [CKV_AWS_53, CKV_AWS_54, CKV_AWS_55, CKV_AWS_56]
+    kics:    ["a2c52a51-... (S3 Bucket Allows Public ACL)"]
+    trivy:   [AVD-AWS-0086]
+
+- canonicalControl: AVD-AWS-0088        # S3 server-side encryption
+  category: encryption
+  cwe: CWE-311
+  title: "S3 bucket sem criptografia em repouso"
+  ids:
+    checkov: [CKV_AWS_19]
+    kics:    ["bd0... (S3 Bucket Without Encryption)"]
+    trivy:   [AVD-AWS-0088]
+
+- canonicalControl: AVD-AWS-0132        # S3 encryption with CMK
+  category: encryption
+  ids:
+    checkov: [CKV_AWS_145]
+    trivy:   [AVD-AWS-0132]
+
+- canonicalControl: AVD-AWS-0089        # S3 access logging
+  category: logging
+  ids:
+    checkov: [CKV_AWS_18]
+    kics:    ["f87... (S3 Bucket Logging Disabled)"]
+    trivy:   [AVD-AWS-0089]
+
+- canonicalControl: AVD-AWS-0090        # S3 versioning
+  category: data-protection
+  ids:
+    checkov: [CKV_AWS_21]
+    trivy:   [AVD-AWS-0090]
+
+- canonicalControl: AVD-AWS-0091        # S3 block public ACLs (account)
+  category: public-access
+  ids:
+    checkov: [CKV_AWS_20]
+    trivy:   [AVD-AWS-0091]
+
+- canonicalControl: AVD-AWS-0057        # IAM policy wildcard actions
+  category: iam
+  cwe: CWE-269
+  title: "Política IAM com ações curinga (*)"
+  ids:
+    checkov: [CKV_AWS_1, CKV_AWS_49]
+    kics:    ["2f3... (IAM Policy Grants Full Admin)"]
+    trivy:   [AVD-AWS-0057]
+
+- canonicalControl: AVD-AWS-0345        # IAM no inline policies
+  category: iam
+  ids:
+    checkov: [CKV_AWS_40]
+    trivy:   [AVD-AWS-0345]
+
+- canonicalControl: AVD-AWS-0123        # IAM password policy length
+  category: iam
+  ids:
+    checkov: [CKV_AWS_10, CKV_AWS_11]
+    trivy:   [AVD-AWS-0123]
+
+- canonicalControl: AVD-AWS-0167        # IAM no user-attached policies
+  category: iam
+  ids:
+    checkov: [CKV_AWS_273]
+    trivy:   [AVD-AWS-0167]

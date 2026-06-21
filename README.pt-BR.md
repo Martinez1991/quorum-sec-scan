@@ -1,0 +1,233 @@
+# Quorum
+
+[English](README.md) · **Português**
+
+> Scanning de segurança por consenso. Rode um pool de scanners open-source,
+> correlacione os achados em que eles concordam e obtenha um único relatório que
+> diz **quantas e quais** ferramentas detectaram cada problema — mais um score de
+> confiança derivado desse consenso.
+
+Quorum **não é mais um scanner**. É a camada leve de correlação + consenso por
+cima dos scanners que você já confia (Trivy, Grype, Checkov, KICS, Dockle,
+Kubescape). É **somente CLI/Docker — sem painel, sem daemon** — feito para rodar
+dentro de um pipeline CI/CD e barrar um build via exit code.
+
+```
+alvo ─▶ orquestrador ─▶ [trivy|grype|checkov|kics|dockle|kubescape]
+                        └▶ normaliza ▶ resolve aliases ▶ correlaciona ▶ score ▶ relatório (SARIF/JSON/XML)
+```
+
+Veja o [DESIGN.md](DESIGN.md) para o modelo de dados completo, a matriz de
+correlação e a matemática do consenso.
+
+---
+
+## Por quê
+
+Scanners diferentes encontram problemas sobrepostos — mas não idênticos — e os
+reportam em formatos incompatíveis. Rode três ferramentas e você terá três
+relatórios, achados duplicados e nenhum sinal sobre quais achados estão
+*corroborados*. O Quorum normaliza tudo para um modelo canônico, funde achados
+equivalentes entre as ferramentas e revela o consenso:
+
+```json
+{
+  "title": "S3 bucket sem bloqueio de acesso público",
+  "severity": "HIGH",
+  "detectedBy": ["checkov", "trivy"],
+  "detectionCount": 2,
+  "confidence": 0.81
+}
+```
+
+Princípio condutor: **falso split > falso merge.** Na dúvida, o Quorum mantém os
+achados separados e os marca como `unmapped` — um merge errado esconde risco.
+
+---
+
+## Instalação
+
+### Docker (recomendado)
+
+```bash
+# Imagem self-contained com todos os scanners embutidos:
+docker run --rm -v "$PWD:/work" ghcr.io/quorum-sec/quorum:full \
+  scan . --type repo --format sarif --output /work/quorum.sarif --fail-on high
+
+# Imagem slim (só o orquestrador — traga seus scanners no PATH):
+docker run --rm -v "$PWD:/work" ghcr.io/quorum-sec/quorum:slim scan . --type repo
+```
+
+### A partir do código
+
+```bash
+go build -o quorum ./cmd/quorum     # ou: make build
+./quorum list-scanners
+```
+
+Go 1.26+. O orquestrador chama os binários de scanner que estiverem no `PATH`;
+os ausentes são reportados como `unavailable` e pulados (o scan nunca falha só
+porque uma ferramenta não está instalada).
+
+---
+
+## Uso
+
+```
+quorum scan <alvo> \
+  --type image|repo|k8s \          # inferido se omitido (caminho existente → repo, senão image)
+  --scanners trivy,grype,checkov \ # padrão: todos que suportam o alvo
+  --format sarif|json|xml \        # padrão: sarif
+  --output report.sarif \          # padrão: stdout
+  --fail-on high \                 # exit 1 se algum achado for >= esta severidade
+  --crosswalk ./crosswalk \        # diretório de mapeamentos rule→control
+  --cache ~/.cache/quorum/aliases.json \
+  --timeout 5m \                   # timeout por scanner
+  --offline \                      # pular lookups de alias na OSV
+  --quiet
+```
+
+Exemplos:
+
+```bash
+# Consenso de SCA sobre uma imagem, barrar em CRITICAL:
+quorum scan minhaimagem:1.2.3 --type image --scanners trivy,grype --fail-on critical
+
+# Consenso de IaC sobre um repo Terraform, SARIF para o GitHub code scanning:
+quorum scan . --type repo --format sarif -o quorum.sarif
+
+# Postura Kubernetes, JSON para processamento posterior:
+quorum scan ./k8s --type k8s --format json -o quorum.json
+```
+
+### Exit codes
+
+| Código | Significado |
+|--------|-------------|
+| `0`    | Sucesso (ou nenhum achado atingiu `--fail-on`) |
+| `1`    | Um achado atingiu ou excedeu `--fail-on` (gate de build) |
+| `2`    | Erro de uso ou de execução |
+
+---
+
+## O que ele faz, etapa por etapa
+
+1. **Scan** — os adapters suportados rodam em paralelo, com timeout por scanner.
+2. **Normalize** — a saída de cada ferramenta vira um `Finding` canônico (uma
+   escala única de severidade, PURLs para pacotes, AVD/CIS/categoria para controles).
+3. **Resolve aliases** (só VULN) — o `GHSA-…` do Grype e o `CVE-…` do Trivy para
+   o mesmo bug são unificados via aliases locais → cache local → OSV.dev (CVE
+   preferido). Falhas de rede degradam graciosamente.
+4. **Correlate** — achados são agrupados por uma `correlationKey` determinística
+   por tipo (`DESIGN §6`). Controles não resolvíveis ficam isolados.
+5. **Score** — cada grupo recebe um `detectionCount` e uma `confidence` 0..1 que
+   pesa diversidade de engine, severidade e confirmação autoritativa — não a
+   contagem bruta (três linters numa linha ≠ sinal forte).
+6. **Report** — SARIF (primário), JSON ou XML.
+
+---
+
+## Scanners
+
+| Adapter | Tipo | Alvos | Notas |
+|---------|------|-------|-------|
+| `trivy` | VULN, MISCONFIG, SECRET | image, repo, k8s | fala AVD nativamente |
+| `grype` | VULN | image, repo | aliases via `relatedVulnerabilities` |
+| `checkov` | MISCONFIG | repo, k8s | crosswalk para AVD |
+| `kics` | MISCONFIG | repo, k8s | crosswalk para AVD |
+| `dockle` | IMG_HARDENING | image | controles CIS-DI |
+| `kubescape` | K8S_POSTURE | k8s | postura por controle |
+
+`quorum list-scanners` imprime o que está registrado.
+
+---
+
+## Formatos de saída
+
+- **SARIF** (primário) — usa `partialFingerprints` (`quorum/v1` =
+  `sha256(correlationKey)`) para que GitHub code scanning / DefectDojo deduplicam
+  o mesmo achado entre execuções de graça. `properties.detectedBy/detectionCount/
+  confidence` carregam o consenso.
+- **JSON** — dump direto dos achados fundidos mais um resumo de execução por
+  scanner e rollup de severidade.
+- **XML** — mesma estrutura serializada para pipelines legados/JUnit-like.
+
+Todo relatório inclui o **status** por scanner (`ran`/`skipped`/`unavailable`/
+`error`/`timeout`). *"0 achados" não é prova de segurança* — pode significar que
+nenhum scanner rodou. O Quorum deixa isso explícito.
+
+---
+
+## Customizando o crosswalk
+
+Misconfigs de IaC/K8s só correlacionam quando o rule id de cada engine mapeia
+para um controle canônico compartilhado. Os mapeamentos vivem em YAML sob
+`--crosswalk` (padrão `./crosswalk`, embutido em `/opt/quorum/crosswalk` nas
+imagens Docker):
+
+```yaml
+- canonicalControl: AVD-AWS-0086
+  category: public-access
+  cwe: CWE-732
+  title: "S3 bucket sem bloqueio de acesso público"
+  ids:
+    checkov: [CKV_AWS_53, CKV_AWS_54]
+    kics:    ["a2c... (S3 Bucket Allows Public ACL)"]
+    trivy:   [AVD-AWS-0086]
+```
+
+Adicione arquivos para mais nuvens/controles; tudo dentro do diretório é
+mesclado. Um rule sem mapeamento **não é adivinhado** — seu achado fica isolado e
+recebe a flag `unmapped`.
+
+> Os números AVD/CKV e UUIDs de KICS em `crosswalk/aws.yaml` são ilustrativos do
+> formato — confira contra os catálogos oficiais antes de usar em produção.
+
+---
+
+## CI/CD
+
+Pipelines prontos para copiar em [examples/ci/](examples/ci/):
+
+- [GitHub Actions](examples/ci/github-actions.yml) — scan + upload do SARIF para o code scanning.
+- [GitLab CI](examples/ci/gitlab-ci.yml) — artefatos SARIF/JSON + gate por exit code.
+
+---
+
+## Roadmap
+
+| Fase  | Entrega |
+|-------|---------|
+| MVP   | Trivy + Grype (SCA), consenso por `vulnId+purl`, SARIF+JSON, imagem `:full` |
+| v0.2  | Checkov + KICS (IaC), crosswalk top-50 S3/IAM, fallback por categoria |
+| v0.3  | Kubescape + Polaris (K8s), Dockle, XML |
+| v1.0  | Camada policy-as-code OPA/Conftest, cache de aliases persistente, perfis de imagem |
+| futuro| módulo runtime separado (modelo de stream Falco/Tetragon) |
+
+---
+
+## Desenvolvimento
+
+```bash
+make test     # testes unitários + de contrato (fixtures em internal/adapter/testdata)
+make vet
+make build
+make docker-full
+```
+
+Cada adapter traz um teste de contrato contra uma fixture versionada da saída
+real da ferramenta, então uma mudança de formato quebra um teste antes de quebrar
+a produção.
+
+---
+
+## Segurança da própria cadeia
+
+Os binários de scanner embutidos fazem parte do seu trust boundary. A imagem
+`:full` pina cada ferramenta por versão; para produção, converta essas tags para
+referências imutáveis `@sha256:<digest>` e valide os checksums dos releases
+(`DESIGN §12`).
+
+## Licença
+
+[Apache-2.0](LICENSE).
