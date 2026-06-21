@@ -3,7 +3,7 @@
 quorum_scan:
   stage: test
   image:
-    name: registry.example.com/quorum/quorum:full # pin by @sha256:... in production
+    name: ghcr.io/martinez1991/quorum-sec-scan:full # pin by @sha256:... in production
     entrypoint: [""]
   script:
     - quorum scan . --type repo --format sarif --output quorum.sarif --crosswalk /opt/quorum/crosswalk --fail-on high
