@@ -23,18 +23,25 @@ jobs:
 
       - name: Build quorum
         run: |
+          mkdir -p "$HOME/.local/bin"
           go build -trimpath -o dist/quorum ./cmd/quorum
           echo "$PWD/dist" >> "$GITHUB_PATH"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Setup Trivy
-        uses: aquasecurity/setup-trivy@v0.2.3
-
-      - name: Setup Grype
-        run: curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b "$HOME/.local/bin"
-
-      - name: Setup Checkov
-        run: pipx install checkov
+      - name: Install scanners (direct release downloads)
+        env:
+          TRIVY_VERSION: "0.55.0"
+          GRYPE_VERSION: "0.79.0"
+        run: |
+          set -euo pipefail
+          bin="$HOME/.local/bin"
+          curl -sSfL -o /tmp/trivy.tgz \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          tar -xzf /tmp/trivy.tgz -C "$bin" trivy
+          curl -sSfL -o /tmp/grype.tgz \
+            "https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.tar.gz"
+          tar -xzf /tmp/grype.tgz -C "$bin" grype
+          pipx install checkov
 
       - name: Verify scanners
         run: |
