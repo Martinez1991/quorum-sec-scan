@@ -31,7 +31,7 @@ jobs:
       - name: Install scanners (direct release downloads)
         env:
           TRIVY_VERSION: "0.71.2"
-          GRYPE_VERSION: "0.79.0"
+          GRYPE_VERSION: "0.114.0" # current; older grype DB schemas are retired by Anchore
         run: |
           set -euo pipefail
           bin="$HOME/.local/bin"
@@ -43,11 +43,13 @@ jobs:
           tar -xzf /tmp/grype.tgz -C "$bin" grype
           pipx install checkov
 
-      - name: Verify scanners
+      - name: Verify scanners (and pre-fetch grype DB)
         run: |
           trivy --version
           grype version
           checkov --version
+          grype db update   # fail early if the vuln DB can't be fetched
+          docker pull alpine:3.10   # ensure both tools resolve the same local image
           quorum list-scanners
 
       - name: IaC consensus (Trivy + Checkov over examples/terraform)
