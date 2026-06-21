@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/quorum-sec/quorum/internal/alias"
@@ -141,6 +142,31 @@ func TestRealSCAConsensus(t *testing.T) {
 	}
 	if found.Severity != model.SevCritical {
 		t.Errorf("severity = %q, want CRITICAL", found.Severity)
+	}
+}
+
+// TestTrivyV071AVDPrefix locks the format drift fix: Trivy >= ~0.60 dropped the
+// AVDID field and emits bare ids like "AWS-0086" in ID; the adapter must restore
+// the canonical "AVD-AWS-0086" so it correlates with the crosswalk.
+func TestTrivyV071AVDPrefix(t *testing.T) {
+	fs, err := trivy{}.parse(readFixture(t, "iac_trivy_v071.json"), "0.71.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fs) != 9 {
+		t.Fatalf("got %d misconfig findings, want 9", len(fs))
+	}
+	sawTarget := false
+	for _, f := range fs {
+		if !strings.HasPrefix(f.CanonicalControl, "AVD-AWS-0") {
+			t.Errorf("CanonicalControl = %q, want AVD-AWS-0… (prefix restored)", f.CanonicalControl)
+		}
+		if f.CanonicalControl == "AVD-AWS-0086" {
+			sawTarget = true
+		}
+	}
+	if !sawTarget {
+		t.Error("expected AVD-AWS-0086 among normalized controls")
 	}
 }
 
