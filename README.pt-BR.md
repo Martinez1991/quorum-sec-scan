@@ -51,12 +51,19 @@ achados separados e os marca como `unmapped` — um merge errado esconde risco.
 
 ```bash
 # Imagem self-contained com todos os scanners embutidos:
-docker run --rm -v "$PWD:/work" ghcr.io/quorum-sec/quorum:full \
+docker run --rm -v "$PWD:/work" ghcr.io/martinez1991/quorum-sec-scan:full \
   scan . --type repo --format sarif --output /work/quorum.sarif --fail-on high
 
 # Imagem slim (só o orquestrador — traga seus scanners no PATH):
-docker run --rm -v "$PWD:/work" ghcr.io/quorum-sec/quorum:slim scan . --type repo
+docker run --rm -v "$PWD:/work" ghcr.io/martinez1991/quorum-sec-scan:slim scan . --type repo
 ```
+
+Tags publicadas (buildadas e enviadas ao GHCR pelo [workflow de release](.github/workflows/release.yml) a cada tag `v*`):
+
+| Tag | Imagem |
+|-----|--------|
+| `:latest`, `:full`, `:<versão>` | todos os scanners embutidos (imagem CI self-contained) |
+| `:slim`, `:<versão>-slim` | só o orquestrador |
 
 ### A partir do código
 

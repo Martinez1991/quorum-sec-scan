@@ -15,7 +15,7 @@ jobs:
   quorum:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/quorum-sec/quorum:full # pin by @sha256:... in production
+      image: ghcr.io/martinez1991/quorum-sec-scan:full # pin by @sha256:... in production
     steps:
       - uses: actions/checkout@v4
 
