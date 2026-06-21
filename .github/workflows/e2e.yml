@@ -1,0 +1,80 @@
+name: e2e
+
+# End-to-end proof that consensus actually happens with REAL scanners (not
+# fixtures): build quorum, install the scanners, scan known targets, and fail
+# if no finding is corroborated by two engines.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  TRIVY_VERSION: v0.55.0
+  GRYPE_VERSION: v0.79.0
+  CHECKOV_VERSION: "3.2.300"
+
+jobs:
+  consensus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Build quorum
+        run: |
+          go build -trimpath -o dist/quorum ./cmd/quorum
+          echo "$PWD/dist" >> "$GITHUB_PATH"
+
+      - name: Install scanners (Trivy, Grype, Checkov)
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sudo sh -s -- -b /usr/local/bin "${TRIVY_VERSION}"
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh \
+            | sudo sh -s -- -b /usr/local/bin "${GRYPE_VERSION}"
+          pipx install "checkov==${CHECKOV_VERSION}"
+          quorum list-scanners
+
+      - name: IaC consensus (Trivy + Checkov over examples/terraform)
+        run: |
+          set -euo pipefail
+          quorum scan examples/terraform --type repo \
+            --scanners trivy,checkov --format json --output iac.json --offline --quiet
+          echo "--- corroborated IaC findings ---"
+          jq -r '.findings[] | select(.detectionCount > 1)
+                 | "\(.severity)\t\(.detectionCount)\t\(.detectedBy | join("+"))\t\(.title)"' iac.json
+          multi=$(jq '.summary.multiDetected' iac.json)
+          echo "IaC multiDetected=$multi"
+          if [ "$multi" -lt 1 ]; then
+            echo "::error::no cross-engine IaC consensus reached"; exit 1
+          fi
+
+      - name: SCA consensus (Trivy + Grype over alpine:3.10)
+        run: |
+          set -euo pipefail
+          quorum scan alpine:3.10 --type image \
+            --scanners trivy,grype --format json --output sca.json --offline --quiet
+          echo "--- corroborated SCA findings ---"
+          jq -r '.findings[] | select(.detectionCount > 1)
+                 | "\(.severity)\t\(.detectionCount)\t\(.detectedBy | join("+"))\t\(.title)"' sca.json | head -20
+          multi=$(jq '.summary.multiDetected' sca.json)
+          echo "SCA multiDetected=$multi"
+          if [ "$multi" -lt 1 ]; then
+            echo "::error::no cross-engine SCA consensus reached"; exit 1
+          fi
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quorum-e2e-reports
+          path: |
+            iac.json
+            sca.json
+          if-no-files-found: ignore
