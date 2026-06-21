@@ -98,6 +98,8 @@ quorum scan <alvo> \
   --format sarif|json|xml \        # padrão: sarif
   --output report.sarif \          # padrão: stdout
   --fail-on high \                 # exit 1 se algum achado for >= esta severidade
+  --min-severity medium \          # descarta achados abaixo desta severidade
+  --baseline .quorumignore \       # suprime achados aceitos (por fingerprint/chave)
   --crosswalk ./crosswalk \        # diretório de mapeamentos rule→control
   --cache ~/.cache/quorum/aliases.json \
   --timeout 5m \                   # timeout por scanner
@@ -117,6 +119,15 @@ quorum scan . --type repo --format sarif -o quorum.sarif
 # Postura Kubernetes, JSON para processamento posterior:
 quorum scan ./k8s --type k8s --format json -o quorum.json
 ```
+
+### Baseline (aceitar achados conhecidos)
+
+Para adotar `--fail-on` no CI é preciso poder aceitar achados já triados.
+Coloque um fingerprint ou correlationKey por linha num arquivo de baseline
+(padrão `.quorumignore`); achados correspondentes são suprimidos do relatório e
+do gate. `#` inicia comentário. Os fingerprints vêm direto do relatório
+(`fingerprint` no JSON, `partialFingerprints["quorum/v1"]` no SARIF). As
+contagens de supressão são sempre logadas — nada é descartado silenciosamente.
 
 ### Exit codes
 
