@@ -30,7 +30,7 @@ jobs:
 
       - name: Install scanners (direct release downloads)
         env:
-          TRIVY_VERSION: "0.55.0"
+          TRIVY_VERSION: "0.71.2"
           GRYPE_VERSION: "0.79.0"
         run: |
           set -euo pipefail
