@@ -1,0 +1,93 @@
+name: e2e
+
+# End-to-end proof that consensus actually happens with REAL scanners (not
+# fixtures): build quorum, install the scanners, scan known targets, and fail
+# if no finding is corroborated by two engines.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  consensus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Build quorum
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          go build -trimpath -o dist/quorum ./cmd/quorum
+          echo "$PWD/dist" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install scanners (direct release downloads)
+        env:
+          TRIVY_VERSION: "0.71.2"
+          GRYPE_VERSION: "0.114.0" # current; older grype DB schemas are retired by Anchore
+        run: |
+          set -euo pipefail
+          bin="$HOME/.local/bin"
+          curl -sSfL -o /tmp/trivy.tgz \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          tar -xzf /tmp/trivy.tgz -C "$bin" trivy
+          curl -sSfL -o /tmp/grype.tgz \
+            "https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.tar.gz"
+          tar -xzf /tmp/grype.tgz -C "$bin" grype
+          pipx install checkov
+
+      - name: Verify scanners (and pre-fetch grype DB)
+        run: |
+          trivy --version
+          grype version
+          checkov --version
+          grype db update   # fail early if the vuln DB can't be fetched
+          docker pull alpine:3.10   # ensure both tools resolve the same local image
+          quorum list-scanners
+
+      - name: IaC consensus (Trivy + Checkov over examples/terraform)
+        run: |
+          set -euo pipefail
+          quorum scan examples/terraform --type repo \
+            --scanners trivy,checkov --format json --output iac.json --offline
+          echo "--- scanner runs ---"; jq -c '.scanners[] | {name,status,findings}' iac.json
+          echo "--- corroborated IaC findings ---"
+          jq -r '.findings[] | select(.detectionCount > 1)
+                 | "\(.severity)\t\(.detectionCount)\t\(.detectedBy | join("+"))\t\(.title)"' iac.json
+          multi=$(jq '.summary.multiDetected' iac.json)
+          echo "IaC multiDetected=$multi"
+          if [ "$multi" -lt 1 ]; then
+            echo "::error::no cross-engine IaC consensus reached"; exit 1
+          fi
+
+      - name: SCA consensus (Trivy + Grype over alpine:3.10)
+        run: |
+          set -euo pipefail
+          quorum scan alpine:3.10 --type image \
+            --scanners trivy,grype --format json --output sca.json --offline
+          echo "--- scanner runs ---"; jq -c '.scanners[] | {name,status,findings}' sca.json
+          echo "--- corroborated SCA findings ---"
+          jq -r '.findings[] | select(.detectionCount > 1)
+                 | "\(.severity)\t\(.detectionCount)\t\(.detectedBy | join("+"))\t\(.title)"' sca.json | head -20
+          multi=$(jq '.summary.multiDetected' sca.json)
+          echo "SCA multiDetected=$multi"
+          if [ "$multi" -lt 1 ]; then
+            echo "::error::no cross-engine SCA consensus reached"; exit 1
+          fi
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quorum-e2e-reports
+          path: |
+            iac.json
+            sca.json
+          if-no-files-found: ignore
