@@ -12,6 +12,9 @@ report.xml
 # Alias cache
 .quorum-cache.json
 
+# Raw scanner captures (real samples are curated into internal/adapter/testdata)
+/_captures/
+
 # OS / editor
 .DS_Store
 Thumbs.db

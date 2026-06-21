@@ -1,0 +1,242 @@
+{
+  "matches": [
+    {
+      "vulnerability": {
+        "id": "CVE-2021-36159",
+        "dataSource": "https://security.alpinelinux.org/vuln/CVE-2021-36159",
+        "namespace": "alpine:distro:alpine:3.10",
+        "severity": "Critical",
+        "urls": [],
+        "cvss": [
+          {
+            "source": "nvd@nist.gov",
+            "type": "Primary",
+            "version": "3.1",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H",
+            "metrics": {
+              "baseScore": 9.1,
+              "exploitabilityScore": 3.9,
+              "impactScore": 5.2
+            },
+            "vendorMetadata": {}
+          }
+        ],
+        "epss": [
+          {
+            "cve": "CVE-2021-36159",
+            "epss": 0.02637,
+            "percentile": 0.83581,
+            "date": "2026-06-20"
+          }
+        ],
+        "cwes": [
+          {
+            "cve": "CVE-2021-36159",
+            "cwe": "CWE-125",
+            "source": "nvd@nist.gov",
+            "type": "Primary"
+          }
+        ],
+        "fix": {
+          "versions": [
+            "2.10.7-r0"
+          ],
+          "state": "fixed",
+          "available": [
+            {
+              "version": "2.10.7-r0",
+              "date": "2026-02-27",
+              "kind": "first-observed"
+            }
+          ]
+        },
+        "advisories": [],
+        "risk": 2.386485
+      },
+      "relatedVulnerabilities": [
+        {
+          "id": "CVE-2021-36159",
+          "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2021-36159",
+          "namespace": "nvd:cpe",
+          "severity": "Critical",
+          "urls": [
+            "https://github.com/freebsd/freebsd-src/commits/main/lib/libfetch",
+            "https://gitlab.alpinelinux.org/alpine/apk-tools/-/issues/10749",
+            "https://lists.apache.org/thread.html/r61db8e7dcb56dc000a5387a88f7a473bacec5ee01b9ff3f55308aacc%40%3Cdev.kafka.apache.org%3E",
+            "https://lists.apache.org/thread.html/r61db8e7dcb56dc000a5387a88f7a473bacec5ee01b9ff3f55308aacc%40%3Cusers.kafka.apache.org%3E",
+            "https://lists.apache.org/thread.html/rbf4ce74b0d1fa9810dec50ba3ace0caeea677af7c27a97111c06ccb7%40%3Cdev.kafka.apache.org%3E",
+            "https://lists.apache.org/thread.html/rbf4ce74b0d1fa9810dec50ba3ace0caeea677af7c27a97111c06ccb7%40%3Cusers.kafka.apache.org%3E"
+          ],
+          "description": "libfetch before 2021-07-26, as used in apk-tools, xbps, and other products, mishandles numeric strings for the FTP and HTTP protocols. The FTP passive mode implementation allows an out-of-bounds read because strtol is used to parse the relevant numbers into address bytes. It does not check if the line ends prematurely. If it does, the for-loop condition checks for the '\\0' terminator one byte too late.",
+          "cvss": [
+            {
+              "source": "nvd@nist.gov",
+              "type": "Primary",
+              "version": "3.1",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H",
+              "metrics": {
+                "baseScore": 9.1,
+                "exploitabilityScore": 3.9,
+                "impactScore": 5.2
+              },
+              "vendorMetadata": {}
+            },
+            {
+              "source": "nvd@nist.gov",
+              "type": "Primary",
+              "version": "2.0",
+              "vector": "AV:N/AC:L/Au:N/C:P/I:N/A:P",
+              "metrics": {
+                "baseScore": 6.4,
+                "exploitabilityScore": 10,
+                "impactScore": 5
+              },
+              "vendorMetadata": {}
+            }
+          ],
+          "epss": [
+            {
+              "cve": "CVE-2021-36159",
+              "epss": 0.02637,
+              "percentile": 0.83581,
+              "date": "2026-06-20"
+            }
+          ],
+          "cwes": [
+            {
+              "cve": "CVE-2021-36159",
+              "cwe": "CWE-125",
+              "source": "nvd@nist.gov",
+              "type": "Primary"
+            }
+          ]
+        }
+      ],
+      "matchDetails": [
+        {
+          "type": "exact-direct-match",
+          "matcher": "apk-matcher",
+          "searchedBy": {
+            "distro": {
+              "type": "alpine",
+              "version": "3.10.9"
+            },
+            "package": {
+              "name": "apk-tools",
+              "version": "2.10.6-r0"
+            },
+            "namespace": "alpine:distro:alpine:3.10"
+          },
+          "found": {
+            "vulnerabilityID": "CVE-2021-36159",
+            "versionConstraint": "< 2.10.7-r0 (apk)"
+          },
+          "fix": {
+            "suggestedVersion": "2.10.7-r0"
+          }
+        },
+        {
+          "type": "exact-indirect-match",
+          "matcher": "apk-matcher",
+          "searchedBy": {
+            "distro": {
+              "type": "alpine",
+              "version": "3.10.9"
+            },
+            "package": {
+              "name": "apk-tools",
+              "version": "2.10.6-r0"
+            },
+            "namespace": "alpine:distro:alpine:3.10"
+          },
+          "found": {
+            "vulnerabilityID": "CVE-2021-36159",
+            "versionConstraint": "< 2.10.7-r0 (apk)"
+          },
+          "fix": {
+            "suggestedVersion": "2.10.7-r0"
+          }
+        }
+      ],
+      "artifact": {
+        "id": "d4f773b96f8dcf5f",
+        "name": "apk-tools",
+        "version": "2.10.6-r0",
+        "type": "apk",
+        "locations": [
+          {
+            "path": "/lib/apk/db/installed",
+            "layerID": "sha256:9fb3aa2f8b8023a4bebbf92aa567caf88e38e969ada9f0ac12643b2847391635",
+            "accessPath": "/lib/apk/db/installed",
+            "annotations": {
+              "evidence": "primary"
+            }
+          }
+        ],
+        "language": "",
+        "licenses": [
+          "GPL2"
+        ],
+        "cpes": [
+          "cpe:2.3:a:apk-tools:apk-tools:2.10.6-r0:*:*:*:*:*:*:*",
+          "cpe:2.3:a:apk-tools:apk_tools:2.10.6-r0:*:*:*:*:*:*:*",
+          "cpe:2.3:a:apk_tools:apk-tools:2.10.6-r0:*:*:*:*:*:*:*",
+          "cpe:2.3:a:apk_tools:apk_tools:2.10.6-r0:*:*:*:*:*:*:*",
+          "cpe:2.3:a:apk:apk-tools:2.10.6-r0:*:*:*:*:*:*:*",
+          "cpe:2.3:a:apk:apk_tools:2.10.6-r0:*:*:*:*:*:*:*"
+        ],
+        "purl": "pkg:apk/alpine/apk-tools@2.10.6-r0?arch=x86_64&distro=alpine-3.10.9",
+        "upstreams": [
+          {
+            "name": "apk-tools"
+          }
+        ],
+        "metadataType": "ApkMetadata",
+        "metadata": {
+          "files": [
+            {
+              "path": "/etc"
+            },
+            {
+              "path": "/etc/apk"
+            },
+            {
+              "path": "/etc/apk/protected_paths.d"
+            },
+            {
+              "path": "/etc/apk/keys"
+            },
+            {
+              "path": "/sbin"
+            },
+            {
+              "path": "/sbin/apk"
+            },
+            {
+              "path": "/usr"
+            },
+            {
+              "path": "/var"
+            },
+            {
+              "path": "/var/cache"
+            },
+            {
+              "path": "/var/cache/misc"
+            },
+            {
+              "path": "/var/lib"
+            },
+            {
+              "path": "/var/lib/apk"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "descriptor": {
+    "name": "grype",
+    "version": "0.114.0"
+  }
+}
