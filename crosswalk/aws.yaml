@@ -1,75 +1,84 @@
-# crosswalk/aws.yaml — canonicalControl agrupa rule-ids equivalentes entre engines.
-# Hub canônico: AVD (Trivy já fala AVD). Mapeia Checkov/KICS -> AVD.
+# crosswalk/aws.yaml — canonicalControl groups equivalent rule-ids across engines.
+# Hub: AVD (Trivy speaks AVD natively). Maps Checkov/KICS rule-ids -> AVD.
 #
-# AVISO: os números AVD/CKV e UUIDs de KICS abaixo são ILUSTRATIVOS DO FORMATO.
-# Confira contra os catálogos oficiais antes de produção (ver DESIGN §8 e §14).
+# These mappings were derived from REAL scanner output (Trivy 0.55, Checkov,
+# KICS v2.1.3) run against examples/terraform, then cross-checked semantically.
+# KICS ids are the real query UUIDs. Conservative by design: only clearly
+# equivalent controls are grouped (false split > false merge, DESIGN §3/§6).
 
-- canonicalControl: AVD-AWS-0086        # S3 bucket public access block
+# ── S3 ───────────────────────────────────────────────────────────────────────
+
+- canonicalControl: AVD-AWS-0092        # S3 bucket ACL grants public read/write
   category: public-access
   cwe: CWE-732
-  title: "S3 bucket sem bloqueio de acesso público"
+  title: "S3 bucket com ACL de acesso público"
   ids:
-    checkov: [CKV_AWS_53, CKV_AWS_54, CKV_AWS_55, CKV_AWS_56]
-    kics:    ["a2c52a51-... (S3 Bucket Allows Public ACL)"]
-    trivy:   [AVD-AWS-0086]
+    trivy:   [AVD-AWS-0092]
+    checkov: [CKV_AWS_20]
+    kics:    ["38c5ee0d-7f22-4260-ab72-5073048df100"]   # S3 Bucket ACL Allows Read Or Write to All Users
 
-- canonicalControl: AVD-AWS-0088        # S3 server-side encryption
+- canonicalControl: AVD-AWS-0094        # S3 bucket should define a public access block
+  category: public-access
+  title: "S3 bucket sem public access block definido"
+  ids:
+    trivy:   [AVD-AWS-0094]
+    checkov: [CKV2_AWS_6]
+
+- canonicalControl: AVD-AWS-0090        # S3 versioning
+  category: data-protection
+  title: "S3 bucket sem versionamento"
+  ids:
+    trivy:   [AVD-AWS-0090]
+    checkov: [CKV_AWS_21]
+    kics:    ["568a4d22-3517-44a6-a7ad-6a7eed88722c"]   # S3 Bucket Without Versioning
+
+- canonicalControl: AVD-AWS-0089        # S3 access logging
+  category: logging
+  title: "S3 bucket sem logging de acesso"
+  ids:
+    trivy:   [AVD-AWS-0089]
+    checkov: [CKV_AWS_18]
+    kics:    ["f861041c-8c9f-4156-acfc-5e6e524f5884"]   # S3 Bucket Logging Disabled
+
+- canonicalControl: AVD-AWS-0088        # S3 server-side encryption (at rest)
   category: encryption
   cwe: CWE-311
   title: "S3 bucket sem criptografia em repouso"
   ids:
-    checkov: [CKV_AWS_19]
-    kics:    ["bd0... (S3 Bucket Without Encryption)"]
     trivy:   [AVD-AWS-0088]
+    checkov: [CKV_AWS_19]
 
-- canonicalControl: AVD-AWS-0132        # S3 encryption with CMK
+- canonicalControl: AVD-AWS-0132        # S3 encryption with customer-managed KMS key
   category: encryption
+  cwe: CWE-311
+  title: "S3 bucket sem criptografia com CMK/KMS"
   ids:
-    checkov: [CKV_AWS_145]
     trivy:   [AVD-AWS-0132]
+    checkov: [CKV_AWS_145]
 
-- canonicalControl: AVD-AWS-0089        # S3 access logging
-  category: logging
-  ids:
-    checkov: [CKV_AWS_18]
-    kics:    ["f87... (S3 Bucket Logging Disabled)"]
-    trivy:   [AVD-AWS-0089]
+# ── IAM ──────────────────────────────────────────────────────────────────────
 
-- canonicalControl: AVD-AWS-0090        # S3 versioning
-  category: data-protection
-  ids:
-    checkov: [CKV_AWS_21]
-    trivy:   [AVD-AWS-0090]
-
-- canonicalControl: AVD-AWS-0091        # S3 block public ACLs (account)
-  category: public-access
-  ids:
-    checkov: [CKV_AWS_20]
-    trivy:   [AVD-AWS-0091]
-
-- canonicalControl: AVD-AWS-0057        # IAM policy wildcard actions
+- canonicalControl: AVD-AWS-0057        # IAM policy with wildcard actions / full admin
   category: iam
   cwe: CWE-269
-  title: "Política IAM com ações curinga (*)"
+  title: "Política IAM com ações curinga (*) / privilégios totais"
   ids:
-    checkov: [CKV_AWS_1, CKV_AWS_49]
-    kics:    ["2f3... (IAM Policy Grants Full Admin)"]
     trivy:   [AVD-AWS-0057]
+    checkov: [CKV_AWS_63, CKV_AWS_62, CKV2_AWS_40]
+    kics:
+      - "575a2155-6af1-4026-b1af-d5bc8fe2a904"          # IAM Policy Grants Full Permissions
+      - "2f37c4a3-58b9-4afe-8a87-d7f1d2286f84"          # IAM Policies With Full Privileges
 
 - canonicalControl: AVD-AWS-0345        # IAM no inline policies
   category: iam
+  title: "Política IAM inline (preferir managed policies)"
   ids:
-    checkov: [CKV_AWS_40]
     trivy:   [AVD-AWS-0345]
-
-- canonicalControl: AVD-AWS-0123        # IAM password policy length
-  category: iam
-  ids:
-    checkov: [CKV_AWS_10, CKV_AWS_11]
-    trivy:   [AVD-AWS-0123]
+    checkov: [CKV_AWS_40]
 
 - canonicalControl: AVD-AWS-0167        # IAM no user-attached policies
   category: iam
+  title: "Política IAM anexada diretamente a usuário"
   ids:
-    checkov: [CKV_AWS_273]
     trivy:   [AVD-AWS-0167]
+    checkov: [CKV_AWS_273]

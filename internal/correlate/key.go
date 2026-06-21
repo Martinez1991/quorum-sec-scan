@@ -17,8 +17,15 @@ func BuildKey(f model.Finding) string {
 	case model.TypeVuln:
 		return "VULN|" + strings.ToUpper(f.VulnID) + "|" + purl.NameVersion(f.PURL)
 	case model.TypeMisconfig:
-		return "MISCONFIG|" + normPath(f.Location.File) + "|" +
-			normResource(f.Resource.Address) + "|" + controlKey(f)
+		// Different engines disagree on both the file path (e.g. "main.tf" vs
+		// "/main.tf" vs "../../work/x/main.tf") and the resource identity (the
+		// Terraform address "aws_s3_bucket.data" vs the literal bucket name).
+		// To make cross-engine consensus actually work we key on the file
+		// basename + resource TYPE + canonical control. Trade-off: two distinct
+		// resources of the same type with the same control in the same file may
+		// over-merge — acceptable vs. never correlating at all (see KNOWN ISSUES).
+		return "MISCONFIG|" + fileKey(f.Location.File) + "|" +
+			resourceType(f.Resource) + "|" + controlKey(f)
 	case model.TypeK8sPosture:
 		return "K8S|" + objectRef(f.Resource) + "|" +
 			strings.ToLower(f.Resource.Address) /*container*/ + "|" + controlKey(f)
@@ -58,8 +65,31 @@ func normPath(p string) string {
 	return strings.ToLower(p)
 }
 
-func normResource(addr string) string {
-	return strings.ToLower(strings.TrimSpace(addr))
+// fileKey reduces a file path to its lowercased basename, the only portion
+// that is stable across scanners (they report different roots/relativity).
+func fileKey(p string) string {
+	if p == "" {
+		return ""
+	}
+	p = strings.ReplaceAll(p, "\\", "/")
+	p = path.Clean(p)
+	return strings.ToLower(path.Base(p))
+}
+
+// resourceType derives a stable resource TYPE from a resource. It prefers the
+// first dotted segment of the address that looks like a provider resource type
+// (contains '_', e.g. "aws_s3_bucket" from "aws_s3_bucket.data" or
+// "module.x.aws_s3_bucket.data"), falling back to the explicit Kind.
+func resourceType(r model.Resource) string {
+	for _, seg := range strings.Split(r.Address, ".") {
+		if strings.Contains(seg, "_") {
+			return strings.ToLower(seg)
+		}
+	}
+	if r.Kind != "" {
+		return strings.ToLower(r.Kind)
+	}
+	return strings.ToLower(strings.TrimSpace(r.Address))
 }
 
 func objectRef(r model.Resource) string {

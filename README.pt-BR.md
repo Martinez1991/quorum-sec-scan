@@ -239,6 +239,20 @@ a produção.
 
 ---
 
+## Limitações conhecidas
+
+- **Granularidade da correlação de MISCONFIG.** Os scanners divergem no caminho
+  do arquivo e na identidade do recurso (Trivy/Checkov usam o endereço Terraform
+  `aws_s3_bucket.data`, enquanto o KICS costuma usar o nome literal do recurso).
+  Para o consenso entre engines funcionar, achados de MISCONFIG correlacionam por
+  `basename(arquivo) + tipoDoRecurso + controleCanônico`. Trade-off: dois
+  recursos distintos do *mesmo tipo* com o *mesmo* controle no *mesmo* arquivo
+  podem se fundir indevidamente. Identidade por recurso fica para uma versão
+  futura.
+- **Cobertura do crosswalk.** O `crosswalk/aws.yaml` cobre controles comuns de
+  S3/IAM (derivados de saída real dos scanners); controles sem mapeamento ficam
+  isolados e marcados como `unmapped`, em vez de adivinhados.
+
 ## Segurança da própria cadeia
 
 Os binários de scanner embutidos fazem parte do seu trust boundary. A imagem

@@ -235,6 +235,19 @@ real output, so a format change breaks a test before it breaks production.
 
 ---
 
+## Known limitations
+
+- **MISCONFIG correlation granularity.** Scanners disagree on file paths and
+  resource identity (Trivy/Checkov use the Terraform address `aws_s3_bucket.data`
+  while KICS often uses the literal resource name). To make cross-engine
+  consensus work, MISCONFIG findings correlate on `basename(file) + resourceType
+  + canonicalControl`. Trade-off: two distinct resources of the *same type* with
+  the *same* control in the *same* file may over-merge. Proper per-resource
+  identity is tracked for a future release.
+- **Crosswalk coverage.** `crosswalk/aws.yaml` covers common S3/IAM controls
+  (derived from real scanner output); controls without a mapping stay isolated
+  and flagged `unmapped` rather than guessed.
+
 ## Security of the chain itself
 
 Bundled scanner binaries are part of your trust boundary. The `:full` image
