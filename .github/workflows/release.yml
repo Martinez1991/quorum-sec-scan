@@ -1,10 +1,19 @@
 name: release
 
-# Builds and publishes the Quorum Docker images to GitHub Container Registry
-# (ghcr.io) on every `v*` tag, and on manual dispatch.
+# Builds, publishes and signs the Quorum Docker images on GitHub Container
+# Registry (ghcr.io) on every `v*` tag, and on manual dispatch.
 #
-#   :full / :<version> / :latest   → all scanners bundled (self-contained CI image)
-#   :slim / :<version>-slim        → orchestrator only (bring your own scanners)
+#   :full / :<version> / :latest   → all scanners bundled (linux/amd64 only,
+#                                    the bundled scanner binaries are amd64)
+#   :slim / :<version>-slim        → orchestrator only (linux/amd64 + linux/arm64)
+#
+# Images are signed keylessly with cosign via the GitHub OIDC identity (no keys
+# to manage). Verify with:
+#
+#   cosign verify ghcr.io/<owner>/quorum-sec-scan:slim \
+#     --certificate-identity-regexp \
+#       "https://github.com/<owner>/quorum-sec-scan/.github/workflows/release.yml@.*" \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com
 
 on:
   push:
@@ -20,6 +29,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write # required for cosign keyless signing (Sigstore OIDC)
 
 jobs:
   images:
@@ -30,8 +40,10 @@ jobs:
         include:
           - variant: full
             dockerfile: Dockerfile.full
+            platforms: linux/amd64
           - variant: slim
             dockerfile: Dockerfile
+            platforms: linux/amd64,linux/arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -60,6 +72,9 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -70,14 +85,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
       - name: Build and push ${{ matrix.variant }}
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ${{ matrix.dockerfile }}
-          # The :full image pulls linux/amd64-specific scanner binaries, so we
-          # publish amd64 only to keep both variants consistent.
-          platforms: linux/amd64
+          platforms: ${{ matrix.platforms }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
@@ -87,10 +104,24 @@ jobs:
           cache-from: type=gha,scope=quorum-${{ matrix.variant }}
           cache-to: type=gha,scope=quorum-${{ matrix.variant }},mode=max
 
+      - name: Sign image (keyless)
+        env:
+          IMAGE: ${{ steps.meta.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          # Sign the (multi-arch) manifest digest once — covers every tag that
+          # points at it. Keyless: identity comes from the GitHub OIDC token.
+          cosign sign --yes "${IMAGE}@${DIGEST}"
+
       - name: Summary
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           {
-            echo "### Published \`${{ matrix.variant }}\` image"
+            echo "### Published & signed \`${{ matrix.variant }}\` image"
+            echo ""
+            echo "Platforms: \`${{ matrix.platforms }}\`  ·  Digest: \`${DIGEST}\`"
             echo ""
             echo '```'
             echo "${{ steps.meta.outputs.tags }}"
