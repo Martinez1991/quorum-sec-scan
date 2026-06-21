@@ -1,0 +1,19 @@
+# Binaries / build output
+/dist/
+/quorum
+/quorum.exe
+*.exe
+
+# Reports
+*.sarif
+report.json
+report.xml
+
+# Alias cache
+.quorum-cache.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
