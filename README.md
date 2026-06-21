@@ -74,6 +74,13 @@ cosign verify ghcr.io/martinez1991/quorum-sec-scan:slim \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
+### Native binary
+
+Download the archive for your OS/arch from the [Releases](https://github.com/Martinez1991/quorum-sec-scan/releases)
+page (built by GoReleaser; bundles the default crosswalk). Each release ships a
+`checksums.txt` plus a keyless cosign signature (`checksums.txt.sig` /
+`.pem`) you can verify with `cosign verify-blob`.
+
 ### From source
 
 ```bash
