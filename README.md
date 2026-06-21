@@ -59,10 +59,20 @@ docker run --rm -v "$PWD:/work" ghcr.io/martinez1991/quorum-sec-scan:slim scan .
 
 Published tags (built and pushed to GHCR by the [release workflow](.github/workflows/release.yml) on every `v*` tag):
 
-| Tag | Image |
-|-----|-------|
-| `:latest`, `:full`, `:<version>` | all scanners bundled (self-contained CI image) |
-| `:slim`, `:<version>-slim` | orchestrator only |
+| Tag | Image | Platforms |
+|-----|-------|-----------|
+| `:latest`, `:full`, `:<version>` | all scanners bundled (self-contained CI image) | `linux/amd64` |
+| `:slim`, `:<version>-slim` | orchestrator only | `linux/amd64`, `linux/arm64` |
+
+All images are **signed keylessly with [cosign](https://github.com/sigstore/cosign)**
+via the GitHub OIDC identity (no keys to manage). Verify before use:
+
+```bash
+cosign verify ghcr.io/martinez1991/quorum-sec-scan:slim \
+  --certificate-identity-regexp \
+    "https://github.com/Martinez1991/quorum-sec-scan/.github/workflows/release.yml@.*" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
 
 ### From source
 
