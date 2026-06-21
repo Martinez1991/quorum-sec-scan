@@ -1,0 +1,39 @@
+{
+  "SchemaVersion": 2,
+  "Results": [
+    {
+      "Target": "app:latest (alpine 3.18)",
+      "Class": "lang-pkgs",
+      "Type": "jar",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2021-44228",
+          "PkgName": "org.apache.logging.log4j:log4j-core",
+          "InstalledVersion": "2.14.1",
+          "PkgIdentifier": { "PURL": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" },
+          "Severity": "CRITICAL",
+          "Title": "log4j: Remote code execution via JNDI (Log4Shell)",
+          "Description": "Apache Log4j2 JNDI features do not protect against attacker controlled LDAP.",
+          "CVSS": { "nvd": { "V3Score": 10.0 }, "redhat": { "V3Score": 9.8 } },
+          "DataSource": { "Name": "GitHub Security Advisory Maven" }
+        }
+      ]
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "Misconfigurations": [
+        {
+          "Type": "Terraform",
+          "ID": "AVD-AWS-0086",
+          "AVDID": "AVD-AWS-0086",
+          "Title": "S3 bucket sem bloqueio de acesso público",
+          "Description": "S3 bucket allows public access.",
+          "Severity": "HIGH",
+          "CauseMetadata": { "Resource": "aws_s3_bucket.data", "StartLine": 1, "EndLine": 3 }
+        }
+      ]
+    }
+  ]
+}

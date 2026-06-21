@@ -1,0 +1,36 @@
+# Example: run quorum in GitHub Actions and upload the SARIF to code scanning.
+# Uses the self-contained quorum:full image so no scanners need installing.
+name: security-scan
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write # required to upload SARIF
+
+jobs:
+  quorum:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/quorum-sec/quorum:full # pin by @sha256:... in production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Quorum consensus scan (IaC + SCA)
+        run: |
+          quorum scan . \
+            --type repo \
+            --format sarif \
+            --output quorum.sarif \
+            --crosswalk /opt/quorum/crosswalk \
+            --fail-on high
+        # exit 1 if any finding is HIGH+ → the job (and PR check) fails.
+
+      - name: Upload SARIF
+        if: always() # upload even when --fail-on tripped the step
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: quorum.sarif

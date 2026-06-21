@@ -1,0 +1,10 @@
+.git
+.github
+*.md
+!crosswalk/*.md
+examples
+testdata
+dist
+*.sarif
+*.json.out
+.quorum-cache.json

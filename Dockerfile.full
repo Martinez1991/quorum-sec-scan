@@ -1,0 +1,85 @@
+# syntax=docker/dockerfile:1
+
+# ─────────────────────────────────────────────────────────────────────────────
+# quorum:full — orchestrator + every bundled scanner. Self-contained for CI.
+#
+# SUPPLY-CHAIN NOTE (DESIGN §12): the version tags below are PINNED VERSIONS for
+# readability. Before shipping to production, replace each mutable tag with an
+# immutable @sha256:<digest> and verify release checksums. A scanner image is
+# part of YOUR trust boundary.
+# ─────────────────────────────────────────────────────────────────────────────
+
+ARG TRIVY_VERSION=0.55.0
+ARG GRYPE_VERSION=v0.79.0
+ARG SYFT_VERSION=v1.11.0
+ARG DOCKLE_VERSION=0.4.14
+ARG KICS_VERSION=v2.1.3
+ARG KUBESCAPE_VERSION=v3.0.8
+ARG CHECKOV_VERSION=3.2.300
+
+# Pull prebuilt scanner binaries from their official images (pin by digest in prod).
+FROM aquasec/trivy:${TRIVY_VERSION} AS trivy
+FROM checkmarx/kics:${KICS_VERSION}-alpine AS kics
+
+# ── Build the quorum binary ──────────────────────────────────────────────────
+FROM golang:1.26-alpine AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+ARG VERSION=dev
+RUN CGO_ENABLED=0 go build -trimpath \
+    -ldflags "-s -w -X main.version=${VERSION}" \
+    -o /out/quorum ./cmd/quorum
+
+# ── Assemble the runtime image ───────────────────────────────────────────────
+FROM alpine:3.20
+ARG GRYPE_VERSION
+ARG SYFT_VERSION
+ARG DOCKLE_VERSION
+ARG KUBESCAPE_VERSION
+ARG CHECKOV_VERSION
+
+RUN apk add --no-cache ca-certificates bash curl tar python3 py3-pip git docker-cli
+
+# quorum + bundled crosswalks
+COPY --from=build /out/quorum /usr/local/bin/quorum
+COPY crosswalk /opt/quorum/crosswalk
+
+# Trivy (binary lives at /usr/local/bin/trivy in the official image)
+COPY --from=trivy /usr/local/bin/trivy /usr/local/bin/trivy
+
+# KICS: copy binary + its query assets together so they sit side-by-side
+# (KICS discovers ./assets next to the executable).
+COPY --from=kics /app/bin/ /usr/local/bin/
+
+# Grype + Syft via the official anchore installers (checksum-verified by the script).
+RUN curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh \
+      | sh -s -- -b /usr/local/bin ${GRYPE_VERSION} && \
+    curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+      | sh -s -- -b /usr/local/bin ${SYFT_VERSION}
+
+# Dockle from GitHub release (verify checksum).
+RUN set -eux; \
+    ver="${DOCKLE_VERSION}"; \
+    curl -sSfL -o /tmp/dockle.tgz \
+      "https://github.com/goodwithtech/dockle/releases/download/v${ver}/dockle_${ver}_Linux-64bit.tar.gz"; \
+    curl -sSfL -o /tmp/dockle.sha256 \
+      "https://github.com/goodwithtech/dockle/releases/download/v${ver}/dockle_${ver}_checksums.txt"; \
+    grep "Linux-64bit.tar.gz" /tmp/dockle.sha256 | awk '{print $1"  /tmp/dockle.tgz"}' | sha256sum -c -; \
+    tar -xzf /tmp/dockle.tgz -C /usr/local/bin dockle; \
+    rm -f /tmp/dockle.tgz /tmp/dockle.sha256
+
+# Kubescape via official installer.
+RUN curl -sSfL https://github.com/kubescape/kubescape/releases/download/${KUBESCAPE_VERSION}/kubescape-ubuntu-latest \
+      -o /usr/local/bin/kubescape && chmod +x /usr/local/bin/kubescape || \
+    curl -sSfL https://raw.githubusercontent.com/kubescape/kubescape/master/install.sh | bash
+
+# Checkov in an isolated venv.
+RUN python3 -m venv /opt/checkov && \
+    /opt/checkov/bin/pip install --no-cache-dir "checkov==${CHECKOV_VERSION}" && \
+    ln -s /opt/checkov/bin/checkov /usr/local/bin/checkov
+
+WORKDIR /work
+ENTRYPOINT ["quorum"]
+CMD ["--help"]
