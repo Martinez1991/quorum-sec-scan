@@ -14,6 +14,7 @@ import (
 	"github.com/quorum-sec/quorum/internal/cache"
 	"github.com/quorum-sec/quorum/internal/correlate"
 	"github.com/quorum-sec/quorum/internal/crosswalk"
+	"github.com/quorum-sec/quorum/internal/filter"
 	"github.com/quorum-sec/quorum/internal/model"
 	"github.com/quorum-sec/quorum/internal/orchestrator"
 	"github.com/quorum-sec/quorum/internal/report"
@@ -27,6 +28,8 @@ type scanFlags struct {
 	format     string
 	output     string
 	failOn     string
+	minSev     string
+	baseline   string
 	crosswalk  string
 	cachePath  string
 	timeout    time.Duration
@@ -55,6 +58,8 @@ func newScanCmd() *cobra.Command {
 	fl.StringVarP(&f.format, "format", "f", "sarif", "output format: sarif|json|xml")
 	fl.StringVarP(&f.output, "output", "o", "", "output file (default: stdout)")
 	fl.StringVar(&f.failOn, "fail-on", "", "exit non-zero if any finding is >= this severity: critical|high|medium|low")
+	fl.StringVar(&f.minSev, "min-severity", "", "drop findings below this severity from the report/gating: critical|high|medium|low")
+	fl.StringVar(&f.baseline, "baseline", ".quorumignore", "baseline file of fingerprints/correlationKeys to suppress")
 	fl.StringVar(&f.crosswalk, "crosswalk", "./crosswalk", "directory of crosswalk mapping files")
 	fl.StringVar(&f.cachePath, "cache", defaultCachePath(), "alias resolver cache file")
 	fl.DurationVar(&f.timeout, "timeout", 5*time.Minute, "per-scanner timeout")
@@ -78,6 +83,23 @@ func runScan(cmd *cobra.Command, target string, f *scanFlags) error {
 		}
 		failThreshold = sev
 		gating = true
+	}
+
+	minSeverity := model.SevUnknown
+	if f.minSev != "" {
+		sev, ok := severity.Parse(f.minSev)
+		if !ok {
+			return fmt.Errorf("invalid --min-severity %q (want critical|high|medium|low)", f.minSev)
+		}
+		minSeverity = sev
+	}
+
+	baseline, present, err := filter.LoadBaseline(f.baseline)
+	if err != nil {
+		return fmt.Errorf("loading baseline: %w", err)
+	}
+	if !present && cmd.Flags().Changed("baseline") {
+		return fmt.Errorf("baseline file not found: %s", f.baseline)
 	}
 
 	format, err := report.ParseFormat(f.format)
@@ -113,6 +135,15 @@ func runScan(cmd *cobra.Command, target string, f *scanFlags) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	// Post-process: suppress baseline-listed findings and those below the
+	// minimum severity, before reporting and gating.
+	fr := filter.Apply(res.Merged, minSeverity, baseline)
+	res.Merged = fr.Kept
+	if fr.SuppressedBaseline > 0 || fr.SuppressedSeverity > 0 {
+		logf("filtered: %d suppressed by baseline (%d entries), %d below min-severity %s",
+			fr.SuppressedBaseline, baseline.Len(), fr.SuppressedSeverity, minSeverity)
 	}
 
 	if err := emit(cmd, res, format, f.output); err != nil {

@@ -3,11 +3,31 @@ package adapter
 import (
 	"context"
 	"encoding/json"
+	"regexp"
+	"strings"
 
 	"github.com/quorum-sec/quorum/internal/model"
 	"github.com/quorum-sec/quorum/internal/purl"
 	"github.com/quorum-sec/quorum/internal/severity"
 )
+
+// avdLikeRe matches a bare AVD control id without the "AVD-" prefix, e.g.
+// "AWS-0086" or "GCP-0012" — the form Trivy >= ~0.60 emits in the Misconfig
+// "ID" field after dropping the dedicated AVDID field.
+var avdLikeRe = regexp.MustCompile(`^[A-Z][A-Z0-9]*-[0-9]+$`)
+
+// normalizeAVD canonicalizes a Trivy misconfig id to the "AVD-<provider>-<n>"
+// form the crosswalk and the rest of the pipeline use. Already-prefixed ids and
+// non-AVD slugs pass through unchanged.
+func normalizeAVD(id string) string {
+	if id == "" || strings.HasPrefix(id, "AVD-") {
+		return id
+	}
+	if avdLikeRe.MatchString(id) {
+		return "AVD-" + id
+	}
+	return id
+}
 
 func init() { Register(&trivy{}) }
 
@@ -137,13 +157,13 @@ func (t trivy) parse(data []byte, ver string) ([]model.Finding, error) {
 			})
 		}
 		for _, m := range r.Misconfigurations {
-			id := firstNonEmpty(m.AVDID, m.ID)
+			raw := firstNonEmpty(m.AVDID, m.ID)
 			out = append(out, model.Finding{
 				Type:             model.TypeMisconfig,
 				Scanner:          "trivy",
 				ScannerVersion:   ver,
-				RuleID:           id,
-				CanonicalControl: id, // Trivy speaks AVD natively → already canonical
+				RuleID:           raw,
+				CanonicalControl: normalizeAVD(raw), // Trivy speaks AVD; newer versions drop the "AVD-" prefix
 				Severity:         severity.FromLabel(m.Severity),
 				Title:            m.Title,
 				Description:      m.Description,

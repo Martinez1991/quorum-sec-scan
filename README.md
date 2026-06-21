@@ -74,6 +74,13 @@ cosign verify ghcr.io/martinez1991/quorum-sec-scan:slim \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
+### Native binary
+
+Download the archive for your OS/arch from the [Releases](https://github.com/Martinez1991/quorum-sec-scan/releases)
+page (built by GoReleaser; bundles the default crosswalk). Each release ships a
+`checksums.txt` plus a keyless cosign signature (`checksums.txt.sig` /
+`.pem`) you can verify with `cosign verify-blob`.
+
 ### From source
 
 ```bash
@@ -96,6 +103,8 @@ quorum scan <target> \
   --format sarif|json|xml \        # default: sarif
   --output report.sarif \          # default: stdout
   --fail-on high \                 # exit 1 if any finding is >= this severity
+  --min-severity medium \          # drop findings below this severity from report/gating
+  --baseline .quorumignore \       # suppress accepted findings (by fingerprint/key)
   --crosswalk ./crosswalk \        # directory of rule→control mappings
   --cache ~/.cache/quorum/aliases.json \
   --timeout 5m \                   # per-scanner timeout
@@ -115,6 +124,23 @@ quorum scan . --type repo --format sarif -o quorum.sarif
 # Kubernetes posture, JSON for further processing:
 quorum scan ./k8s --type k8s --format json -o quorum.json
 ```
+
+### Baseline (accepting known findings)
+
+To adopt `--fail-on` in CI you need a way to accept findings you've triaged.
+Put one fingerprint or correlationKey per line in a baseline file (default
+`.quorumignore`); matching findings are suppressed from the report and the gate.
+`#` starts a comment.
+
+```
+# .quorumignore — accepted risks (reviewed 2026-06-21)
+2f1a…e9c4              # CVE-2021-… in apk-tools, not reachable
+MISCONFIG|main.tf|aws_s3_bucket|AVD-AWS-0089   # logging handled centrally
+```
+
+Fingerprints come straight from the report (`partialFingerprints["quorum/v1"]`
+in SARIF, `fingerprint` in JSON). Suppressed counts are always logged — a
+suppressed finding is still reported as suppressed, never silently dropped.
 
 ### Exit codes
 
