@@ -1,12 +1,14 @@
 package adapter
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/quorum-sec/quorum/internal/model"
 )
@@ -43,15 +45,29 @@ func (k kubescape) Run(ctx context.Context, target Target) ([]model.Finding, err
 		"--output", outFile,
 		"--format-version", "v2",
 	)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	runErr := cmd.Run()
 
 	data, readErr := os.ReadFile(outFile)
-	if readErr != nil {
-		if runErr != nil {
-			return nil, fmt.Errorf("kubescape: %w", runErr)
+	usable := readErr == nil && len(bytes.TrimSpace(data)) > 0
+
+	// Like other scanners, kubescape may exit non-zero precisely because it found
+	// failing controls while still writing a valid report — that is success. Only
+	// treat the run as failed when it left us nothing usable to parse, and then
+	// surface its stderr instead of a downstream "unexpected end of JSON input".
+	if !usable {
+		detail := strings.TrimSpace(stderr.String())
+		switch {
+		case runErr != nil:
+			return nil, fmt.Errorf("kubescape: %w: %s", runErr, detail)
+		case readErr != nil:
+			return nil, fmt.Errorf("kubescape: report not produced: %w: %s", readErr, detail)
+		default:
+			return nil, fmt.Errorf("kubescape: empty report (no resources scanned?): %s", detail)
 		}
-		return nil, fmt.Errorf("kubescape: report not produced: %w", readErr)
 	}
+
 	ver, _ := k.Version(ctx)
 	return k.parse(data, ver)
 }
