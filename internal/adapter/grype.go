@@ -32,7 +32,11 @@ func (g grype) Run(ctx context.Context, target Target) ([]model.Finding, error) 
 	if target.Type == TargetRepo {
 		ref = "dir:" + ref
 	}
-	out, err := runCmd(ctx, "grype", ref, "-o", "json", "-q")
+	// No -q: grype's --quiet also suppresses error logging, which would leave a
+	// failure with an empty stderr ("exit status 1:" and nothing else). runCmd
+	// only surfaces stderr on failure, so the progress noise on success is
+	// discarded anyway — keeping logs on buys us a real diagnostic when it fails.
+	out, err := runCmd(ctx, "grype", ref, "-o", "json")
 	if err != nil {
 		return nil, err
 	}

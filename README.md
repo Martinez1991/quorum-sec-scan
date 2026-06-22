@@ -57,6 +57,24 @@ docker run --rm -v "$PWD:/work" ghcr.io/martinez1991/quorum-sec-scan:full \
 docker run --rm -v "$PWD:/work" ghcr.io/martinez1991/quorum-sec-scan:slim scan . --type repo
 ```
 
+> **Mind the bind mount.** The source has to be mounted at `/work` — note the
+> colon in `host:container`. On Windows the path separator and the volume
+> separator are both easy to confuse:
+>
+> ```bat
+> REM cmd.exe — the ":" before /work is required, NOT a slash:
+> docker run --rm -v "%cd%:/work" ghcr.io/martinez1991/quorum-sec-scan:full scan . --type repo
+> ```
+> ```powershell
+> # PowerShell:
+> docker run --rm -v "${PWD}:/work" ghcr.io/martinez1991/quorum-sec-scan:full scan . --type repo
+> ```
+>
+> A malformed mount (e.g. `-v "%cd%/work"`) scans an empty `/work` and reports
+> **0 findings** for everything — a false negative, not a clean bill of health.
+> When run from the image, the bundled crosswalk at `/opt/quorum/crosswalk` is
+> auto-detected, so `--crosswalk` is optional (pass it to use your own mappings).
+
 Published tags (built and pushed to GHCR by the [release workflow](.github/workflows/release.yml) on every `v*` tag):
 
 | Tag | Image | Platforms |

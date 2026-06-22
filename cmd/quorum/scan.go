@@ -107,7 +107,8 @@ func runScan(cmd *cobra.Command, target string, f *scanFlags) error {
 		return err
 	}
 
-	cw, err := crosswalk.Load(f.crosswalk)
+	cwDir := resolveCrosswalkDir(f.crosswalk, cmd.Flags().Changed("crosswalk"))
+	cw, err := crosswalk.Load(cwDir)
 	if err != nil {
 		return fmt.Errorf("loading crosswalk: %w", err)
 	}
@@ -124,7 +125,7 @@ func runScan(cmd *cobra.Command, target string, f *scanFlags) error {
 			fmt.Fprintf(os.Stderr, "[quorum] "+format+"\n", args...)
 		}
 	}
-	logf("target=%s type=%s crosswalk=%d rules offline=%v", target, tt, cw.Len(), f.offline)
+	logf("target=%s type=%s crosswalk=%d rules (%s) offline=%v", target, tt, cw.Len(), cwDir, f.offline)
 
 	tgt := adapter.Target{Type: tt, Ref: target}
 	res, err := orchestrator.Run(context.Background(), tgt, orchestrator.Options{
@@ -213,6 +214,32 @@ func worstSeverity(res *orchestrator.Result) model.Severity {
 		}
 	}
 	return worst
+}
+
+// bundledCrosswalkDir is where the Docker images ship the default crosswalk.
+const bundledCrosswalkDir = "/opt/quorum/crosswalk"
+
+// resolveCrosswalkDir picks the crosswalk directory to load. If the user passed
+// --crosswalk explicitly, it is respected verbatim. Otherwise, when the default
+// ./crosswalk is absent but the image-bundled /opt/quorum/crosswalk exists, fall
+// back to it — so `docker run … scan .` from an arbitrary workdir still gets the
+// mappings instead of silently loading 0 rules.
+func resolveCrosswalkDir(dir string, changed bool) string {
+	if changed {
+		return dir
+	}
+	if isDir(dir) {
+		return dir
+	}
+	if isDir(bundledCrosswalkDir) {
+		return bundledCrosswalkDir
+	}
+	return dir
+}
+
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }
 
 func resolveTargetType(explicit, ref string) (adapter.TargetType, error) {
