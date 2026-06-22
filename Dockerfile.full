@@ -9,17 +9,19 @@
 # part of YOUR trust boundary.
 # ─────────────────────────────────────────────────────────────────────────────
 
-ARG TRIVY_VERSION=0.55.0
-ARG GRYPE_VERSION=v0.79.0
+ARG TRIVY_VERSION=0.71.2
+ARG GRYPE_VERSION=v0.114.0
 ARG SYFT_VERSION=v1.11.0
 ARG DOCKLE_VERSION=0.4.14
 ARG KICS_VERSION=v2.1.3
 ARG KUBESCAPE_VERSION=v3.0.8
 ARG CHECKOV_VERSION=3.2.300
 
-# Pull prebuilt scanner binaries from their official images (pin by digest in prod).
-FROM aquasec/trivy:${TRIVY_VERSION} AS trivy
-FROM checkmarx/kics:${KICS_VERSION}-alpine AS kics
+# Pull prebuilt scanner binaries from their official images, PINNED BY DIGEST
+# (the tag is kept alongside for readability). Re-resolve digests when bumping a
+# version: docker buildx imagetools inspect <image>:<tag> --format '{{.Manifest.Digest}}'
+FROM aquasec/trivy:${TRIVY_VERSION}@sha256:f5d0e600ecda7449e2a9b272805aef698631d3bb3f3a739a750de2c6819acdc9 AS trivy
+FROM checkmarx/kics:${KICS_VERSION}-alpine@sha256:8b191adbd156038cfbc163fd1ab1b210c839bd9e065777287eadc8d267a60b9d AS kics
 
 # ── Build the quorum binary ──────────────────────────────────────────────────
 FROM golang:1.26-alpine AS build

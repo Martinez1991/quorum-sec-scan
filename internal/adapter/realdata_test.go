@@ -170,6 +170,33 @@ func TestTrivyV071AVDPrefix(t *testing.T) {
 	}
 }
 
+// TestDockleParse validates the Dockle adapter against real output (alpine:3.10).
+// PASS/SKIP/IGNORE rows are dropped; FATAL/WARN/INFO become findings. CIS-DI
+// codes are already canonical.
+func TestDockleParse(t *testing.T) {
+	fs, err := dockle{}.parse(readFixture(t, "img_dockle_alpine.json"), "0.4.14")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The capture has CIS-DI-0001 (WARN) + CIS-DI-0005/0006 (INFO).
+	if len(fs) != 3 {
+		t.Fatalf("got %d findings, want 3", len(fs))
+	}
+	bySev := map[string]model.Severity{}
+	for _, f := range fs {
+		if f.Type != model.TypeImgHardening {
+			t.Errorf("%s: type = %q", f.CanonicalControl, f.Type)
+		}
+		bySev[f.CanonicalControl] = f.Severity
+	}
+	if bySev["CIS-DI-0001"] != model.SevMedium {
+		t.Errorf("CIS-DI-0001 severity = %q, want MEDIUM (WARN)", bySev["CIS-DI-0001"])
+	}
+	if bySev["CIS-DI-0005"] != model.SevLow {
+		t.Errorf("CIS-DI-0005 severity = %q, want LOW (INFO)", bySev["CIS-DI-0005"])
+	}
+}
+
 func indexByControl(merged []model.MergedFinding) map[string]model.MergedFinding {
 	out := map[string]model.MergedFinding{}
 	for _, m := range merged {

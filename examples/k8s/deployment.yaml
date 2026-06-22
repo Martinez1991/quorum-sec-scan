@@ -1,0 +1,28 @@
+# Intentionally insecure Deployment for demoing quorum's K8s posture consensus.
+# Runs as root, privileged, no resource limits, no read-only FS — Kubescape
+# (and Trivy k8s, on the same crosswalk) should flag several controls.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quorum-demo
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quorum-demo
+  template:
+    metadata:
+      labels:
+        app: quorum-demo
+    spec:
+      containers:
+        - name: app
+          image: nginx:latest
+          securityContext:
+            privileged: true
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+            readOnlyRootFilesystem: false
+          ports:
+            - containerPort: 80
