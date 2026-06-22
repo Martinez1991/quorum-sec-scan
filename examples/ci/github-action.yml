@@ -1,0 +1,35 @@
+# Example: run quorum via the published GitHub Action (no container: block, no
+# scanners to install — the action runs the signed quorum:full image for you).
+# Available from tag v0.2.1+ (the tag that first ships action.yml).
+name: security-scan
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write # required to upload SARIF to code scanning
+
+jobs:
+  quorum:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Quorum consensus scan (IaC + SCA)
+        id: scan
+        uses: Martinez1991/quorum-sec-scan@v0 # pin by @<sha> in production
+        with:
+          target: .
+          type: repo
+          format: sarif
+          output: quorum.sarif
+          fail-on: high # exit 1 if any finding is HIGH+ → the check fails
+
+      - name: Upload SARIF
+        if: always() # upload even when the gate tripped
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.scan.outputs.output-file }}
