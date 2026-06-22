@@ -30,6 +30,7 @@ permissions:
   contents: read
   packages: write
   id-token: write # required for cosign keyless signing (Sigstore OIDC)
+  attestations: write # required for SLSA build-provenance attestations
 
 jobs:
   images:
@@ -114,6 +115,28 @@ jobs:
           # points at it. Keyless: identity comes from the GitHub OIDC token.
           cosign sign --yes "${IMAGE}@${DIGEST}"
 
+      - name: Attest SLSA build provenance
+        # Generates a signed SLSA v1 provenance attestation for the image and
+        # pushes it to GHCR alongside the cosign signature. This records *how*
+        # the image was built (workflow, commit, runner) — verifiable later.
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ steps.meta.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Verify provenance attestation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ${{ steps.meta.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          # Re-verify the just-pushed attestation end-to-end (Sigstore transparency
+          # log + GitHub OIDC identity) so a broken attestation fails the release.
+          gh attestation verify "oci://${IMAGE}@${DIGEST}" \
+            --repo "${GITHUB_REPOSITORY}"
+
       - name: Summary
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
@@ -136,6 +159,7 @@ jobs:
     permissions:
       contents: write # create the GitHub release and upload assets
       id-token: write # cosign keyless
+      attestations: write # SLSA build-provenance attestations
     steps:
       - uses: actions/checkout@v4
         with:
@@ -155,3 +179,21 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attest SLSA build provenance for binaries
+        # One attestation covering every artifact listed in checksums.txt
+        # (GoReleaser writes it in `sha256  name` format). Complements the
+        # existing cosign signature over the checksum file.
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-checksums: dist/checksums.txt
+
+      - name: Verify binary provenance attestation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Spot-check one artifact against its just-created attestation.
+          shopt -s nullglob
+          artifacts=(dist/quorum_*_linux_amd64.tar.gz)
+          gh attestation verify "${artifacts[0]}" --repo "${GITHUB_REPOSITORY}"

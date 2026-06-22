@@ -1,0 +1,159 @@
+# GitHub Action wrapper around the self-contained quorum:full image, so a
+# pipeline can run a consensus scan with `uses:` instead of hand-writing a
+# `container:`/`docker run` block. The image bundles every scanner — nothing to
+# install. By default it cosign-verifies the image before running it.
+#
+#   - uses: Martinez1991/quorum-sec-scan@v0   # action.yml ships from v0.2.1+
+#     with:
+#       target: .
+#       type: repo
+#       fail-on: high
+#
+name: Quorum consensus security scan
+description: >-
+  Run a quorum of open-source scanners (Trivy, Grype, Checkov, KICS, Dockle,
+  Kubescape), correlate the findings they agree on, and gate the build by exit
+  code — wrapping the signed, self-contained quorum:full image.
+author: Martinez1991
+branding:
+  icon: shield
+  color: purple
+
+inputs:
+  target:
+    description: Path or image reference to scan.
+    required: false
+    default: "."
+  type:
+    description: "Target type: image | repo | k8s (inferred from the target if empty)."
+    required: false
+    default: ""
+  scanners:
+    description: "Comma-separated scanners to run (default: all that support the target)."
+    required: false
+    default: ""
+  format:
+    description: "Output format: sarif | json | xml."
+    required: false
+    default: sarif
+  output:
+    description: "Report file, relative to the working directory (empty = stdout)."
+    required: false
+    default: quorum.sarif
+  fail-on:
+    description: "Exit non-zero if any finding is >= this severity: critical|high|medium|low."
+    required: false
+    default: ""
+  min-severity:
+    description: Drop findings below this severity from the report and gating.
+    required: false
+    default: ""
+  baseline:
+    description: Baseline file of fingerprints/correlationKeys to suppress.
+    required: false
+    default: ""
+  crosswalk:
+    description: Crosswalk mapping directory (defaults to the one bundled in the image).
+    required: false
+    default: /opt/quorum/crosswalk
+  timeout:
+    description: Per-scanner timeout (e.g. 5m).
+    required: false
+    default: ""
+  offline:
+    description: Disable OSV alias lookups (scanner-local aliases + cache only).
+    required: false
+    default: "false"
+  quiet:
+    description: Suppress progress logs on stderr.
+    required: false
+    default: "false"
+  image:
+    description: Quorum image to run. Pin by @sha256:... in production.
+    required: false
+    default: ghcr.io/martinez1991/quorum-sec-scan:full
+  verify:
+    description: Cosign-verify the image signature (keyless OIDC) before running it.
+    required: false
+    default: "true"
+  working-directory:
+    description: Directory mounted into the scanner as /work.
+    required: false
+    default: ${{ github.workspace }}
+
+outputs:
+  output-file:
+    description: Absolute path to the written report (empty when output is stdout).
+    value: ${{ steps.run.outputs.output-file }}
+  exit-code:
+    description: "Quorum exit code: 0 ok, 1 gate tripped (--fail-on), 2 error."
+    value: ${{ steps.run.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - name: Verify image signature (cosign)
+      if: ${{ inputs.verify == 'true' }}
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+      run: |
+        set -euo pipefail
+        if ! command -v cosign >/dev/null 2>&1; then
+          echo "::group::Install cosign"
+          curl -sSfL -o /tmp/cosign \
+            https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
+          sudo install -m 0755 /tmp/cosign /usr/local/bin/cosign
+          echo "::endgroup::"
+        fi
+        cosign verify "${IMAGE}" \
+          --certificate-identity-regexp \
+            "https://github.com/Martinez1991/quorum-sec-scan/.github/workflows/release.yml@.*" \
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+          > /dev/null
+        echo "✓ cosign verified ${IMAGE}"
+
+    - name: Run quorum
+      id: run
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+        WORKDIR: ${{ inputs.working-directory }}
+        TARGET: ${{ inputs.target }}
+        TYPE: ${{ inputs.type }}
+        SCANNERS: ${{ inputs.scanners }}
+        FORMAT: ${{ inputs.format }}
+        OUTPUT: ${{ inputs.output }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        MIN_SEVERITY: ${{ inputs.min-severity }}
+        BASELINE: ${{ inputs.baseline }}
+        CROSSWALK: ${{ inputs.crosswalk }}
+        TIMEOUT: ${{ inputs.timeout }}
+        OFFLINE: ${{ inputs.offline }}
+        QUIET: ${{ inputs.quiet }}
+      run: |
+        set -euo pipefail
+        args=(scan "$TARGET")
+        [ -n "$TYPE" ]          && args+=(--type "$TYPE")
+        [ -n "$SCANNERS" ]      && args+=(--scanners "$SCANNERS")
+        [ -n "$FORMAT" ]        && args+=(--format "$FORMAT")
+        [ -n "$OUTPUT" ]        && args+=(--output "$OUTPUT")
+        [ -n "$FAIL_ON" ]       && args+=(--fail-on "$FAIL_ON")
+        [ -n "$MIN_SEVERITY" ]  && args+=(--min-severity "$MIN_SEVERITY")
+        [ -n "$BASELINE" ]      && args+=(--baseline "$BASELINE")
+        [ -n "$CROSSWALK" ]     && args+=(--crosswalk "$CROSSWALK")
+        [ -n "$TIMEOUT" ]       && args+=(--timeout "$TIMEOUT")
+        [ "$OFFLINE" = "true" ] && args+=(--offline)
+        [ "$QUIET" = "true" ]   && args+=(--quiet)
+
+        echo "+ docker run --rm -v ${WORKDIR}:/work -w /work ${IMAGE} ${args[*]}"
+        set +e
+        docker run --rm -v "${WORKDIR}:/work" -w /work "${IMAGE}" "${args[@]}"
+        code=$?
+        set -e
+
+        echo "exit-code=${code}" >> "$GITHUB_OUTPUT"
+        if [ -n "$OUTPUT" ]; then
+          echo "output-file=${WORKDIR}/${OUTPUT}" >> "$GITHUB_OUTPUT"
+        fi
+        exit "${code}"

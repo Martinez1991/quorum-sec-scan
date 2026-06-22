@@ -74,12 +74,22 @@ cosign verify ghcr.io/martinez1991/quorum-sec-scan:slim \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
+Each image also ships a **SLSA build-provenance attestation** (who/what/where it
+was built) pushed to GHCR alongside the signature. Verify it with the GitHub CLI:
+
+```bash
+gh attestation verify oci://ghcr.io/martinez1991/quorum-sec-scan:full \
+  --repo Martinez1991/quorum-sec-scan
+```
+
 ### Native binary
 
 Download the archive for your OS/arch from the [Releases](https://github.com/Martinez1991/quorum-sec-scan/releases)
 page (built by GoReleaser; bundles the default crosswalk). Each release ships a
 `checksums.txt` plus a keyless cosign signature (`checksums.txt.sig` /
-`.pem`) you can verify with `cosign verify-blob`.
+`.pem`) you can verify with `cosign verify-blob`. The binaries also carry a SLSA
+provenance attestation — verify any archive with
+`gh attestation verify quorum_<ver>_<os>_<arch>.tar.gz --repo Martinez1991/quorum-sec-scan`.
 
 ### From source
 
@@ -228,9 +238,25 @@ flagged `unmapped`.
 
 ## CI/CD
 
+On GitHub, the quickest path is the bundled action — it runs the signed
+`quorum:full` image (cosign-verified by default) so there are no scanners to
+install:
+
+```yaml
+- uses: Martinez1991/quorum-sec-scan@v0 # ships from v0.2.1; pin by @<sha> in production
+  with:
+    target: .
+    type: repo
+    fail-on: high
+```
+
+See [action.yml](action.yml) for all inputs (`scanners`, `min-severity`,
+`baseline`, `offline`, …) and outputs (`output-file`, `exit-code`).
+
 Ready-to-copy pipelines in [examples/ci/](examples/ci/):
 
-- [GitHub Actions](examples/ci/github-actions.yml) — scan + upload SARIF to code scanning.
+- [GitHub Actions — action](examples/ci/github-action.yml) — `uses:` the bundled action + upload SARIF.
+- [GitHub Actions — container](examples/ci/github-actions.yml) — run the image directly via `container:`.
 - [GitLab CI](examples/ci/gitlab-ci.yml) — SARIF/JSON artifacts + gate on exit code.
 
 ---
