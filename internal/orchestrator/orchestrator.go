@@ -5,7 +5,9 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,6 +16,13 @@ import (
 	"github.com/quorum-sec/quorum/internal/correlate"
 	"github.com/quorum-sec/quorum/internal/model"
 )
+
+// defaultProbeTime is how long to wait for a scanner's version probe before
+// giving up. Generous on purpose: heavy tools (e.g. checkov, a Python process)
+// can be slow to cold-start, especially while every scanner launches at once on
+// a memory-constrained runner. Too tight a budget marks a working tool as
+// "unavailable" when its probe is merely SIGKILLed mid-startup.
+const defaultProbeTime = 60 * time.Second
 
 // ScannerRun records what happened with one scanner (for transparency in the
 // report — "0 vulns" must never look like "scan didn't run", DESIGN §14).
@@ -40,6 +49,7 @@ type Result struct {
 type Options struct {
 	Scanners       []string      // empty = all registered that support the target
 	PerScannerTime time.Duration // per-scanner timeout (0 = no extra timeout)
+	ProbeTime      time.Duration // version-probe timeout (0 = defaultProbeTime)
 	Correlator     *correlate.Correlator
 	Logf           func(format string, args ...any) // optional progress logger
 }
@@ -53,7 +63,10 @@ func (o Options) logf(format string, args ...any) {
 // Run executes the full pipeline and returns the scored result.
 func Run(ctx context.Context, target adapter.Target, opts Options) (*Result, error) {
 	start := time.Now()
-	adapters := selectAdapters(target, opts.Scanners)
+	adapters, unknown := selectAdapters(target, opts.Scanners)
+	for _, name := range unknown {
+		opts.logf("warning: unknown scanner %q ignored (known: %s)", name, strings.Join(knownNames(), ", "))
+	}
 
 	res := &Result{Target: target, StartedAt: start}
 	var (
@@ -109,13 +122,27 @@ func runOne(ctx context.Context, a adapter.Adapter, target adapter.Target, opts 
 		return oneResult{summary: sr}
 	}
 
-	verCtx, cancelVer := context.WithTimeout(ctx, 15*time.Second)
+	probeTime := opts.ProbeTime
+	if probeTime <= 0 {
+		probeTime = defaultProbeTime
+	}
+	verCtx, cancelVer := context.WithTimeout(ctx, probeTime)
 	ver, err := a.Version(verCtx)
+	probeTimedOut := verCtx.Err() == context.DeadlineExceeded
 	cancelVer()
 	if err != nil {
 		sr.Status = "unavailable"
-		sr.Error = err.Error()
-		opts.logf("skip %s: not installed/available", name)
+		switch {
+		case probeTimedOut:
+			sr.Error = fmt.Sprintf("version probe exceeded %s — tool too slow to start or resource-starved (give the container more memory, or scope --scanners): %v", probeTime, err)
+			opts.logf("skip %s: version probe timed out after %s (slow start / low memory?)", name, probeTime)
+		case killedSignal(err):
+			sr.Error = fmt.Sprintf("version probe killed — likely out of memory; raise the container's memory limit: %v", err)
+			opts.logf("skip %s: version probe killed (likely OOM — increase container memory)", name)
+		default:
+			sr.Error = err.Error()
+			opts.logf("skip %s: not installed/available", name)
+		}
 		return oneResult{summary: sr}
 	}
 	sr.Version = ver
@@ -147,17 +174,35 @@ func runOne(ctx context.Context, a adapter.Adapter, target adapter.Target, opts 
 	return oneResult{summary: sr, findings: findings}
 }
 
-func selectAdapters(target adapter.Target, requested []string) []adapter.Adapter {
+// selectAdapters resolves the requested scanner names to adapters. When the
+// request is empty, every registered adapter runs. Names with no matching
+// adapter are returned in `unknown` so the caller can warn instead of silently
+// dropping them.
+func selectAdapters(target adapter.Target, requested []string) (sel []adapter.Adapter, unknown []string) {
 	if len(requested) == 0 {
 		out := adapter.All()
 		sort.Slice(out, func(i, j int) bool { return out[i].Name() < out[j].Name() })
-		return out
+		return out, nil
 	}
-	var out []adapter.Adapter
 	for _, name := range requested {
 		if a, ok := adapter.Get(name); ok {
-			out = append(out, a)
+			sel = append(sel, a)
+		} else {
+			unknown = append(unknown, name)
 		}
 	}
-	return out
+	return sel, unknown
+}
+
+// knownNames returns the registered scanner names, sorted, for diagnostics.
+func knownNames() []string {
+	n := adapter.Names()
+	sort.Strings(n)
+	return n
+}
+
+// killedSignal reports whether err looks like the OS killed the process
+// (SIGKILL) — typically the OOM killer — as opposed to the binary being absent.
+func killedSignal(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "signal: killed")
 }
