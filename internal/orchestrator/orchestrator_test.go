@@ -3,7 +3,10 @@ package orchestrator
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/quorum-sec/quorum/internal/adapter"
 	"github.com/quorum-sec/quorum/internal/model"
@@ -13,12 +16,17 @@ import (
 type fakeAdapter struct {
 	name     string
 	verr     error
+	vblock   bool // Version blocks until ctx is cancelled (simulates a slow probe)
 	runErr   error
 	findings []model.Finding
 }
 
 func (f *fakeAdapter) Name() string { return f.name }
 func (f *fakeAdapter) Version(ctx context.Context) (string, error) {
+	if f.vblock {
+		<-ctx.Done()
+		return "", ctx.Err()
+	}
 	if f.verr != nil {
 		return "", f.verr
 	}
@@ -43,6 +51,7 @@ func init() {
 	adapter.Register(&fakeAdapter{name: "fakeb", findings: []model.Finding{vuln("fakeb")}})
 	adapter.Register(&fakeAdapter{name: "fakedown", verr: errors.New("not installed")})
 	adapter.Register(&fakeAdapter{name: "fakeboom", runErr: errors.New("boom")})
+	adapter.Register(&fakeAdapter{name: "fakeslow", vblock: true})
 }
 
 func TestOrchestratorMergesAcrossScanners(t *testing.T) {
@@ -88,13 +97,53 @@ func TestOrchestratorReportsUnavailableAndError(t *testing.T) {
 }
 
 func TestSelectUnknownScannerIgnored(t *testing.T) {
+	var logs []string
 	res, err := Run(context.Background(), adapter.Target{Type: adapter.TargetImage, Ref: "x"}, Options{
-		Scanners: []string{"does-not-exist"},
+		Scanners: []string{"does-not-exist", "fakea"},
+		Logf:     func(f string, a ...any) { logs = append(logs, fmt.Sprintf(f, a...)) },
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res.Runs) != 0 {
-		t.Errorf("unknown scanner should yield no runs, got %d", len(res.Runs))
+	// The unknown name is dropped (only the known one runs)...
+	if len(res.Runs) != 1 || res.Runs[0].Name != "fakea" {
+		t.Errorf("want only fakea to run, got %+v", res.Runs)
+	}
+	// ...but it must be surfaced as a warning, not silently swallowed.
+	var warned bool
+	for _, l := range logs {
+		if strings.Contains(l, "unknown scanner") && strings.Contains(l, "does-not-exist") {
+			warned = true
+		}
+	}
+	if !warned {
+		t.Errorf("expected a warning about the unknown scanner; logs=%v", logs)
+	}
+}
+
+func TestProbeTimeoutMarksUnavailable(t *testing.T) {
+	var logs []string
+	res, err := Run(context.Background(), adapter.Target{Type: adapter.TargetImage, Ref: "x"}, Options{
+		Scanners:  []string{"fakeslow"},
+		ProbeTime: 50 * time.Millisecond,
+		Logf:      func(f string, a ...any) { logs = append(logs, fmt.Sprintf(f, a...)) },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Runs) != 1 || res.Runs[0].Status != "unavailable" {
+		t.Fatalf("want fakeslow unavailable, got %+v", res.Runs)
+	}
+	if !strings.Contains(res.Runs[0].Error, "version probe exceeded") {
+		t.Errorf("want a clear probe-timeout error, got %q", res.Runs[0].Error)
+	}
+	var sawTimeoutLog bool
+	for _, l := range logs {
+		if strings.Contains(l, "fakeslow") && strings.Contains(l, "timed out") {
+			sawTimeoutLog = true
+		}
+	}
+	if !sawTimeoutLog {
+		t.Errorf("expected a probe-timeout log line; logs=%v", logs)
 	}
 }

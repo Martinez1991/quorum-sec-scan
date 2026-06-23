@@ -61,6 +61,14 @@ RUN curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh \
     curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
       | sh -s -- -b /usr/local/bin ${SYFT_VERSION}
 
+# Pre-cache grype's vulnerability DB into the image so the first scan works
+# offline and never hits "failed to load vulnerability db: database does not
+# exist". The DB is frozen as of build time — rebuild to refresh it, or set
+# GRYPE_DB_AUTO_UPDATE=true at runtime (needs network) to update on the fly.
+ENV GRYPE_DB_CACHE_DIR=/opt/grype/db \
+    GRYPE_DB_AUTO_UPDATE=false
+RUN grype db update && grype db status
+
 # Dockle from GitHub release (verify checksum).
 RUN set -eux; \
     ver="${DOCKLE_VERSION}"; \
