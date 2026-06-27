@@ -1,0 +1,88 @@
+site_name: Quorum — Documentação
+site_description: >-
+  Documentação enterprise do Quorum (consensus security scanning), AS-IS na v0.2.3.
+site_author: Martinez1991
+repo_url: https://github.com/Martinez1991/quorum-sec-scan
+repo_name: Martinez1991/quorum-sec-scan
+edit_uri: edit/main/docs/
+docs_dir: docs
+
+theme:
+  name: material
+  language: pt-BR
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: deep purple
+      toggle:
+        icon: material/weather-night
+        name: Mudar para modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: deep purple
+      toggle:
+        icon: material/weather-sunny
+        name: Mudar para modo claro
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Martinez1991/quorum-sec-scan
+
+nav:
+  - Início: README.md
+  - Índice mestre: 00-index.md
+  - 1. Visão Geral: 01-visao-geral.md
+  - 2. Requisitos Funcionais: 02-requisitos-funcionais.md
+  - 3. Requisitos Não Funcionais: 03-requisitos-nao-funcionais.md
+  - 4. Arquitetura: 04-arquitetura.md
+  - 5. Modelagem de Dados: 05-modelo-de-dados.md
+  - 6. Interfaces (CLI) e Formatos: 06-interfaces-cli-e-formatos.md
+  - 7. Persistência e Artefatos: 07-persistencia-e-artefatos.md
+  - 8. Frontend / Terminal: 08-frontend.md
+  - 9. Backend: 09-backend.md
+  - 10. Infraestrutura: 10-infraestrutura.md
+  - 11. DevOps: 11-devops.md
+  - 12. Segurança: 12-seguranca.md
+  - 13. IA: 13-ia.md
+  - 14. Observabilidade: 14-observabilidade.md
+  - 15. Testes: 15-testes.md
+  - 16. Roadmap: 16-roadmap.md
+  - 17. Backlog: 17-backlog.md
+  - 18. Riscos: 18-riscos.md
+  - 19. Custos: 19-custos.md
+  - 20. Melhorias: 20-melhorias.md
+  - Checklists: 99-checklists.md

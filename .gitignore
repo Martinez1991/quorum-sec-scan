@@ -20,3 +20,6 @@ report.xml
 Thumbs.db
 .idea/
 .vscode/
+
+# MkDocs build output
+/site/
