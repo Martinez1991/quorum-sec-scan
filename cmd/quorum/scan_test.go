@@ -4,7 +4,42 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/quorum-sec/quorum/internal/orchestrator"
+	"github.com/quorum-sec/quorum/internal/report"
+	"github.com/spf13/cobra"
 )
+
+func TestValidateTargetRef(t *testing.T) {
+	for _, good := range []string{".", "./x", "myimage:1.2.3", "/work", "registry.io/app:tag"} {
+		if err := validateTargetRef(good); err != nil {
+			t.Errorf("validateTargetRef(%q) = %v, want nil", good, err)
+		}
+	}
+	for _, bad := range []string{"-rf", "--config=/etc/x", "-"} {
+		if err := validateTargetRef(bad); err == nil {
+			t.Errorf("validateTargetRef(%q) = nil, want error (argument injection)", bad)
+		}
+	}
+}
+
+func TestEmitCleansOutputPath(t *testing.T) {
+	dir := t.TempDir()
+	// A path with a ../ segment must be normalized before writing.
+	out := filepath.Join(dir, "sub", "..", "report.json")
+	want := filepath.Join(dir, "report.json")
+
+	format, err := report.ParseFormat("json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := emit(&cobra.Command{}, &orchestrator.Result{}, format, out); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(want); err != nil {
+		t.Fatalf("expected report at cleaned path %q: %v", want, err)
+	}
+}
 
 func TestResolveCrosswalkDir(t *testing.T) {
 	existing := t.TempDir()

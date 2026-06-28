@@ -5,6 +5,7 @@ package orchestrator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -31,8 +32,29 @@ type ScannerRun struct {
 	Version  string        `json:"version,omitempty"`
 	Status   string        `json:"status"` // ran | skipped | unavailable | error | timeout
 	Findings int           `json:"findings"`
-	Duration time.Duration `json:"durationMs"`
+	Duration time.Duration `json:"-"`
 	Error    string        `json:"error,omitempty"`
+}
+
+// MarshalJSON serializes Duration as whole milliseconds under "durationMs",
+// matching the summary block. Without this, time.Duration marshals as raw
+// nanoseconds, contradicting the field name.
+func (s ScannerRun) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Name           string `json:"name"`
+		Version        string `json:"version,omitempty"`
+		Status         string `json:"status"`
+		Findings       int    `json:"findings"`
+		DurationMillis int64  `json:"durationMs"`
+		Error          string `json:"error,omitempty"`
+	}{
+		Name:           s.Name,
+		Version:        s.Version,
+		Status:         s.Status,
+		Findings:       s.Findings,
+		DurationMillis: s.Duration.Milliseconds(),
+		Error:          s.Error,
+	})
 }
 
 // Result is the full output of a scan.
