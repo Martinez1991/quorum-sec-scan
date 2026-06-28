@@ -342,7 +342,7 @@ flowchart LR
 2. **`secrets.GITHUB_TOKEN`** é o token padrão fornecido pelo GitHub Actions; assume-se que os escopos `packages: write`, `id-token: write` e `attestations: write` estejam disponíveis no repositório (são declarados no workflow).
 3. **Branch protection / required checks**: o documento descreve o fluxo via PR para `main` como prática; não há arquivo de configuração de proteção de branch no repositório verificável aqui, então as regras de "checks obrigatórios" são recomendações alinhadas ao comportamento dos workflows.
 4. **Comandos de verificação para o consumidor** (cosign/`gh attestation verify`) foram extrapolados dos comentários e dos passos de verificação presentes em `release.yml` e `action.yml`; o regexp de identidade usa o owner `Martinez1991`, conforme `action.yml`.
-5. **`v0` como tag móvel** do Action: confirmado pelo comentário em `action.yml` (`uses: Martinez1991/quorum-sec-scan@v0`) e pelo gatilho restrito a semver em `release.yml`; o mecanismo exato de reposicionamento da tag `v0` (manual vs. automatizado) não está em workflow versionado e é descrito como operação de mantenedor.
+5. **`v0` como tag móvel** do Action: confirmado pelo comentário em `action.yml` (`uses: Martinez1991/quorum-sec-scan@v0`) e pelo gatilho restrito a semver em `release.yml`. O reposicionamento de `v0`/`v0.2` é **automatizado** pelo workflow `.github/workflows/tag-major.yml`, que roda a cada release semver e avança as tags móveis para o mesmo commit (essas tags não re-disparam `release.yml`/`tag-major.yml`).
 
 ---
 
