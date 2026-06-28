@@ -161,7 +161,7 @@ backlog ([17-backlog](17-backlog.md)) e melhorias ([20-melhorias](20-melhorias.m
 | G-13 | **`aliases.json` sem integridade/assinatura** (perm 0644): risco de cache poisoning (R7). | Médio | 12 |
 | G-14 | **Sem redaction de valores de segredo** no relatório (R8). | Médio | 12 |
 | G-15 | **Cobertura de testes não coletada no CI**; `internal/{model,purl,consensus,crosswalk}` sem `_test.go` dedicado; e2e não-determinístico (gate só checa `multiDetected>=1`). | Médio | 15 |
-| G-16 | **Tag móvel `v0`** do Action não tem workflow versionado que a mova (operação manual de mantenedor). | Baixo | 11, 99 |
+| G-16 | ✅ **Resolvido.** ~~Tag móvel `v0` movida manualmente~~ — agora o workflow `.github/workflows/tag-major.yml` avança `v0`/`v0.2` automaticamente a cada release semver. | Baixo | 11, 99 |
 | G-17 | **Sem números reais** medidos no repo: minutos de Actions, tamanho de imagens, storage GHCR, benchmarks de performance. | Baixo | 19, 03, 10, 20 |
 | G-18 | **Licenças/NOTICE de terceiros** na `:full` e termos de redistribuição do Grype DB não confirmados no upstream. | Médio | 19 |
 | G-19 | **Verificação não exaustiva**: vários adapters (checkov/kics/dockle/kubescape/grype) e reporters (json/xml) não foram lidos linha a linha; alguns detalhes de DESIGN.md/`action.yml`/`release.yml` vêm do briefing. | Baixo | 02, 04, 09, 12, 20 |
@@ -202,7 +202,7 @@ Decisões que dependem de produto/mantenedores e que destravam ou ajustam a docu
 - [ ] **SAST** (golangci-lint/gosec/CodeQL) e **secret scanning** (gitleaks) entram no `ci.yml` ou em workflow dedicado?
 - [ ] Deve haver **gate de cobertura bloqueante** no CI e qual a meta oficial (sugestão: 80% global / 90% núcleo)? (G-15)
 - [ ] Deve rodar **self-scan (dogfooding)** das imagens publicadas no `release.yml` antes do push?
-- [ ] A **tag móvel `v0`** será movida por automação após o release? (G-16)
+- [x] A **tag móvel `v0`** será movida por automação após o release? (G-16) — ✅ sim, via `tag-major.yml`.
 - [ ] Existe **branch protection** com required checks (ci/e2e) configurada nas settings do GitHub a refletir formalmente?
 
 **Negócio e governança**
