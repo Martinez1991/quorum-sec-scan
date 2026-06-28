@@ -69,6 +69,9 @@ func newScanCmd() *cobra.Command {
 }
 
 func runScan(cmd *cobra.Command, target string, f *scanFlags) error {
+	if err := validateTargetRef(target); err != nil {
+		return err
+	}
 	tt, err := resolveTargetType(f.targetType, target)
 	if err != nil {
 		return err
@@ -170,10 +173,14 @@ func emit(cmd *cobra.Command, res *orchestrator.Result, format report.Format, ou
 		_, err := cmd.OutOrStdout().Write(buf.Bytes())
 		return err
 	}
+	// Normalize the operator-supplied path (collapses ./ and ../ segments) and
+	// write the report with owner-only perms — it may carry sensitive finding
+	// detail and should not be world-readable by default.
+	output = filepath.Clean(output)
 	if dir := filepath.Dir(output); dir != "" {
 		_ = os.MkdirAll(dir, 0o755)
 	}
-	return os.WriteFile(output, buf.Bytes(), 0o644)
+	return os.WriteFile(output, buf.Bytes(), 0o600)
 }
 
 func printSummary(res *orchestrator.Result, quiet bool) {
@@ -240,6 +247,16 @@ func resolveCrosswalkDir(dir string, changed bool) string {
 func isDir(path string) bool {
 	info, err := os.Stat(path)
 	return err == nil && info.IsDir()
+}
+
+// validateTargetRef rejects a target that a downstream scanner could parse as a
+// CLI flag (argument injection). No real image reference or path starts with
+// '-'; a literal path like that must be passed as './-name'.
+func validateTargetRef(ref string) error {
+	if strings.HasPrefix(ref, "-") {
+		return fmt.Errorf("invalid target %q: must not start with '-' (use %q for a path)", ref, "./"+ref)
+	}
+	return nil
 }
 
 func resolveTargetType(explicit, ref string) (adapter.TargetType, error) {

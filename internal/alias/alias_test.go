@@ -42,6 +42,33 @@ func TestOSVClientError(t *testing.T) {
 	}
 }
 
+func TestOSVRejectsMalformedID(t *testing.T) {
+	var hits int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&hits, 1)
+		w.Write([]byte(`{"id":"x"}`))
+	}))
+	defer srv.Close()
+	c := &OSVClient{BaseURL: srv.URL, HTTP: srv.Client()}
+
+	for _, bad := range []string{"../../etc/passwd", "CVE-1/../x", "a b", "?q=1", "", "-CVE-1"} {
+		if _, err := c.Aliases(context.Background(), bad); err == nil {
+			t.Errorf("expected error for malformed id %q", bad)
+		}
+	}
+	if hits != 0 {
+		t.Errorf("malformed ids must not reach the network; got %d request(s)", hits)
+	}
+
+	// A well-formed id is still accepted (reaches the server).
+	if _, err := c.Aliases(context.Background(), "CVE-2021-44228"); err != nil {
+		t.Fatalf("valid id rejected: %v", err)
+	}
+	if hits == 0 {
+		t.Error("valid id should have reached the server")
+	}
+}
+
 func TestOSVClientRetries(t *testing.T) {
 	var hits int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

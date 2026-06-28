@@ -5,9 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	neturl "net/url"
+	"regexp"
 	"strings"
 	"time"
 )
+
+// vulnIDPattern bounds what we will put in the OSV request path. Real OSV ids
+// (CVE-, GHSA-, PYSEC-, GO-, …) start with a letter and use only
+// [A-Za-z0-9._-]. Rejecting anything else stops a scanner-supplied id from
+// injecting path/query segments (e.g. "../", "?", "/") into the request URL.
+var vulnIDPattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9._-]{0,127}$`)
 
 // OSVClient queries OSV.dev to resolve a vuln id to its alias set. It is the
 // arbiter of last resort in the resolver chain.
@@ -42,7 +50,12 @@ func (c *OSVClient) Aliases(ctx context.Context, id string) ([]string, error) {
 	if c == nil {
 		return nil, fmt.Errorf("nil osv client")
 	}
-	url := strings.TrimRight(c.BaseURL, "/") + "/v1/vulns/" + id
+	if !vulnIDPattern.MatchString(id) {
+		return nil, fmt.Errorf("osv: refusing to query malformed vuln id %q", id)
+	}
+	// Validated above; PathEscape as defense-in-depth so the id can never alter
+	// the URL structure.
+	url := strings.TrimRight(c.BaseURL, "/") + "/v1/vulns/" + neturl.PathEscape(id)
 
 	attempts := c.MaxRetries + 1
 	if attempts < 1 {

@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,6 +12,21 @@ import (
 	"github.com/quorum-sec/quorum/internal/adapter"
 	"github.com/quorum-sec/quorum/internal/model"
 )
+
+func TestScannerRunMarshalsDurationAsMillis(t *testing.T) {
+	sr := ScannerRun{Name: "trivy", Status: "ran", Findings: 3, Duration: 1500 * time.Millisecond}
+	b, err := json.Marshal(sr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(b, &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["durationMs"] != float64(1500) {
+		t.Errorf("durationMs = %v, want 1500 (ms, not ns)", got["durationMs"])
+	}
+}
 
 // fakeAdapter is a controllable adapter for orchestrator tests.
 type fakeAdapter struct {
