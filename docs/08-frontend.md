@@ -22,7 +22,7 @@ claramente eventuais propostas futuras.
 | Painel/dashboard, daemon, _long-running_    |  N/A   | Princípio explícito: "No panel, no daemon" ([`root.go`](../cmd/quorum/root.go)). Cada invocação é um processo efêmero.            |
 | Autenticação / contas / sessões de usuário  |  N/A   | Não há multiusuário nem persistência de sessão. A única persistência é o cache local de aliases (`~/.cache/quorum/aliases.json`). |
 | Componentes visuais, CSS, design system web |  N/A   | A renderização é texto puro em `stderr`/`stdout`. Sem ANSI/cores no código Go.                                                    |
-| Responsividade / breakpoints / mobile       |  N/A   | Conceito de viewport não se aplica a um TUI não-interativo. Ver [§7 Responsividade](#7-responsividade--n-a).                       |
+| Responsividade / breakpoints / mobile       |  N/A   | Conceito de viewport não se aplica a um TUI não-interativo. Ver [§8 Responsividade](#8-responsividade--na).                       |
 
 > **Por que isso é uma decisão, não uma lacuna.** O alvo do Quorum é o _runner_
 > de CI/CD e o terminal do desenvolvedor. Um painel web exigiria
@@ -32,7 +32,7 @@ claramente eventuais propostas futuras.
 > Scanning, qualquer viewer SARIF), via o artefato SARIF padronizado.
 
 A superfície visual mais próxima de uma GUI é tratada em
-[§8 GitHub Code Scanning](#8-github-code-scanning-como-superficie-visual).
+[§11 GitHub Code Scanning](#11-github-code-scanning-como-superfície-visual).
 
 ---
 

@@ -655,7 +655,7 @@ contextos operacionais reais: **uso em CI** e **pipeline de release**.
 ## Premissas
 
 - Os números/metas em [§2.4](#24-metas-de-performance-slo-de-produto) e
-  [§15](#15--sla--slo--sli) são **alvos de engenharia**, ainda **não validados por
+  [§15](#15-sla--slo--sli) são **alvos de engenharia**, ainda **não validados por
   benchmark formal** neste repositório.
 - Assume-se que o consumidor em produção **verifica** imagem/binário (cosign +
   `gh attestation verify`) e, idealmente, **pina por digest** — o produto fornece

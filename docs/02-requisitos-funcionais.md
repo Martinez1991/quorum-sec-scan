@@ -29,8 +29,8 @@ Cada RF abaixo é derivado **diretamente do código-fonte** (`cmd/quorum/*.go` e
 | [RF-015](#rf-015--scoring-de-consenso-e-agregação) | Scoring de consenso e agregação | Obrigatório | `consensus` |
 | [RF-016](#rf-016--emissão-de-relatório-sarifjsonxml) | Emissão de relatório SARIF/JSON/XML | Obrigatório | `report` |
 | [RF-017](#rf-017--baseline-de-supressão-quorumignore) | Baseline de supressão (`.quorumignore`) | Obrigatório | `filter` |
-| [RF-018](#rf-018--filtro-de-severidade-mínima-min-severity) | Filtro de severidade mínima (`--min-severity`) | Obrigatório | `filter`, `severity` |
-| [RF-019](#rf-019--gate-de-falha-fail-on-e-exit-codes) | Gate de falha (`--fail-on`) e exit codes | Obrigatório | `cmd/quorum/scan.go`, `severity` |
+| [RF-018](#rf-018--filtro-de-severidade-mínima---min-severity) | Filtro de severidade mínima (`--min-severity`) | Obrigatório | `filter`, `severity` |
+| [RF-019](#rf-019--gate-de-falha---fail-on-e-exit-codes) | Gate de falha (`--fail-on`) e exit codes | Obrigatório | `cmd/quorum/scan.go`, `severity` |
 | [RF-020](#rf-020--saída-em-arquivo-ou-stdout) | Saída em arquivo ou stdout | Obrigatório | `cmd/quorum/scan.go` |
 | [RF-021](#rf-021--resumo-de-console-e-logs-de-progresso) | Resumo de console e logs de progresso | Recomendado | `cmd/quorum/scan.go` |
 | [RF-022](#rf-022--versão-da-ferramenta) | Versão da ferramenta | Recomendado | `cmd/quorum/root.go` |

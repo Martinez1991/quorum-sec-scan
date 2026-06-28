@@ -2,6 +2,11 @@
 
 [English](README.md) · **Português**
 
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-7b42bc?logo=materialformkdocs&logoColor=white)](https://martinez1991.github.io/quorum-sec-scan/)
+[![Deploy docs](https://github.com/Martinez1991/quorum-sec-scan/actions/workflows/docs.yml/badge.svg)](https://github.com/Martinez1991/quorum-sec-scan/actions/workflows/docs.yml)
+
+📚 **Documentação completa:** <https://martinez1991.github.io/quorum-sec-scan/> (fonte em [`docs/`](docs/)).
+
 > Scanning de segurança por consenso. Rode um pool de scanners open-source,
 > correlacione os achados em que eles concordam e obtenha um único relatório que
 > diz **quantas e quais** ferramentas detectaram cada problema — mais um score de
