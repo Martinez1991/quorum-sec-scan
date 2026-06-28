@@ -10,10 +10,9 @@
 #       fail-on: high
 #
 name: Quorum consensus security scan
-description: >-
-  Run a quorum of open-source scanners (Trivy, Grype, Checkov, KICS, Dockle,
-  Kubescape), correlate the findings they agree on, and gate the build by exit
-  code — wrapping the signed, self-contained quorum:full image.
+# Marketplace requires description < 125 chars; the long-form rationale lives in
+# the README/docs, not here.
+description: "Consensus security scanning: runs Trivy, Grype, Checkov, KICS, Dockle, Kubescape and gates the build by exit code."
 author: Martinez1991
 branding:
   icon: shield
