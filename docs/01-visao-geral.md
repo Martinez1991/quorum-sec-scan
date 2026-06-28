@@ -2,7 +2,7 @@
 
 O **Quorum** (`quorum-sec-scan`, v0.2.3) é uma ferramenta **CLI/Docker** de *consensus security scanning*: ela orquestra um *pool* de scanners de segurança open source (Trivy, Grype, Checkov, KICS, Dockle, Kubescape) sobre um alvo, normaliza todos os achados para um modelo canônico, resolve aliases de vulnerabilidade, correlaciona findings equivalentes entre as ferramentas e emite **um único relatório** que informa **quantos e quais** scanners detectaram cada problema — acrescido de um *score* de confiança derivado desse consenso. O Quorum **não é mais um scanner**: é a camada leve de correlação + consenso sobre as ferramentas que você já confia, projetada para rodar dentro de um *pipeline* de CI/CD e barrar um *build* via *exit code*. Este documento descreve objetivo, problema resolvido, público-alvo, personas, benefícios, diferenciais e casos de uso.
 
-> Referências de código verificadas para este documento: [`README.md`](../README.md), [`DESIGN.md`](../DESIGN.md), [`cmd/quorum/root.go`](../cmd/quorum/root.go), [`cmd/quorum/scan.go`](../cmd/quorum/scan.go).
+> Referências de código verificadas para este documento: [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md), [`DESIGN.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md), [`cmd/quorum/root.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/root.go), [`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go).
 
 ---
 
@@ -23,7 +23,7 @@ Em termos operacionais, o Quorum entrega:
 target → normalize → resolve aliases → correlate → score → report (SARIF/JSON/XML)
 ```
 
-Pipeline conforme [`DESIGN.md` §3](../DESIGN.md) e o estágio-a-estágio descrito no [`README.md`](../README.md).
+Pipeline conforme [`DESIGN.md` §3](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) e o estágio-a-estágio descrito no [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md).
 
 ---
 
@@ -41,7 +41,7 @@ Diferentes scanners encontram problemas **sobrepostos mas não idênticos** e os
 | Dedup temporal manual entre execuções de CI | `partialFingerprints["quorum/v1"] = sha256(correlationKey)` no SARIF |
 | Imagens/binários de scanner como vetor de *supply chain* | Distribuição assinada keyless (cosign) + atestação SLSA build-provenance |
 
-**Princípio orientador:** *false split > false merge.* Na dúvida, o Quorum mantém os findings separados e os marca como `unmapped` — um *merge* errado **esconde risco**. (Ver [`DESIGN.md` §6](../DESIGN.md), "Regra do não-match".)
+**Princípio orientador:** *false split > false merge.* Na dúvida, o Quorum mantém os findings separados e os marca como `unmapped` — um *merge* errado **esconde risco**. (Ver [`DESIGN.md` §6](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md), "Regra do não-match".)
 
 ### O que o problema NÃO é (escopo)
 
@@ -80,7 +80,7 @@ O Quorum é destinado a equipes que **já operam scanners OSS** e precisam conso
 
 ## 5. Benefícios
 
-- **Sinal em vez de ruído.** O consenso (`detectionCount` + `confidence`) separa findings corroborados de detecções isoladas; a contagem bruta **não** é confiança — a fórmula pesa diversidade de engine, severidade e confirmação autoritativa ([`DESIGN.md` §9](../DESIGN.md)).
+- **Sinal em vez de ruído.** O consenso (`detectionCount` + `confidence`) separa findings corroborados de detecções isoladas; a contagem bruta **não** é confiança — a fórmula pesa diversidade de engine, severidade e confirmação autoritativa ([`DESIGN.md` §9](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)).
 - **Um relatório, vários formatos.** SARIF (primário, para GitHub code scanning/DefectDojo), JSON (para processamento) e XML (pipelines legados/JUnit-like).
 - **Dedup temporal grátis.** `partialFingerprints["quorum/v1"]` permite que ferramentas externas reconheçam o mesmo finding entre execuções.
 - **Resiliência operacional.** Scanner ausente vira `unavailable` e é pulado — o scan **nunca falha só porque uma ferramenta não está instalada**. *Timeout*/OOM são distinguidos de "não instalado" via *probe* de versão.
@@ -159,14 +159,14 @@ flowchart TB
 
 | Diferencial | O que é | Onde se vê no produto |
 |-------------|---------|-----------------------|
-| **Consenso + score** | `detectionCount` e `confidence` (0..1) por finding; confiança pondera diversidade de engine, severidade e confirmação autoritativa | `properties.detectedBy/detectionCount/confidence` no SARIF; [`DESIGN.md` §9](../DESIGN.md) |
-| **false split > false merge** | Na dúvida, não une findings; controle sem mapeamento fica isolado e `unmapped` | "Regra do não-match", [`DESIGN.md` §6](../DESIGN.md) |
-| **Transparência de status por scanner** | Todo relatório expõe `ran`/`skipped`/`unavailable`/`error`/`timeout`; *probe* de versão distingue timeout/OOM/não-instalado | Resumo no stderr ([`cmd/quorum/scan.go`](../cmd/quorum/scan.go), `printSummary`); *"0 findings is not proof of safety"* |
-| **Correlação determinística** | `correlationKey` por tipo + `Fingerprint = sha256(correlationKey)`; `partialFingerprints["quorum/v1"]` no SARIF | [`DESIGN.md` §6, §11](../DESIGN.md) |
-| **Alias resolution com degradação graciosa** | CVE/GHSA unificados via OSV.dev; falha de rede não derruba o scan; `--offline` desliga OSV | [`DESIGN.md` §7](../DESIGN.md); [`cmd/quorum/scan.go`](../cmd/quorum/scan.go) |
-| **Supply chain assinado** | Imagens `:full`/`:slim` e binários assinados keyless (cosign/OIDC) + atestação SLSA build-provenance; Action composite cosign-verifica antes de rodar | [`README.md`](../README.md) seção Install/CI/CD |
-| **Crosswalk plugável** | YAML `rule → controle canônico` (AVD/CIS); bundled em `/opt/quorum/crosswalk` com fallback automático | [`DESIGN.md` §8](../DESIGN.md); `resolveCrosswalkDir` em [`cmd/quorum/scan.go`](../cmd/quorum/scan.go) |
-| **Baseline auditável** | `.quorumignore` por fingerprint/correlationKey; supressões **sempre logadas**, nunca descartadas em silêncio | [`README.md`](../README.md) seção Baseline; `filter.Apply` |
+| **Consenso + score** | `detectionCount` e `confidence` (0..1) por finding; confiança pondera diversidade de engine, severidade e confirmação autoritativa | `properties.detectedBy/detectionCount/confidence` no SARIF; [`DESIGN.md` §9](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) |
+| **false split > false merge** | Na dúvida, não une findings; controle sem mapeamento fica isolado e `unmapped` | "Regra do não-match", [`DESIGN.md` §6](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) |
+| **Transparência de status por scanner** | Todo relatório expõe `ran`/`skipped`/`unavailable`/`error`/`timeout`; *probe* de versão distingue timeout/OOM/não-instalado | Resumo no stderr ([`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go), `printSummary`); *"0 findings is not proof of safety"* |
+| **Correlação determinística** | `correlationKey` por tipo + `Fingerprint = sha256(correlationKey)`; `partialFingerprints["quorum/v1"]` no SARIF | [`DESIGN.md` §6, §11](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) |
+| **Alias resolution com degradação graciosa** | CVE/GHSA unificados via OSV.dev; falha de rede não derruba o scan; `--offline` desliga OSV | [`DESIGN.md` §7](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md); [`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go) |
+| **Supply chain assinado** | Imagens `:full`/`:slim` e binários assinados keyless (cosign/OIDC) + atestação SLSA build-provenance; Action composite cosign-verifica antes de rodar | [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) seção Install/CI/CD |
+| **Crosswalk plugável** | YAML `rule → controle canônico` (AVD/CIS); bundled em `/opt/quorum/crosswalk` com fallback automático | [`DESIGN.md` §8](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md); `resolveCrosswalkDir` em [`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go) |
+| **Baseline auditável** | `.quorumignore` por fingerprint/correlationKey; supressões **sempre logadas**, nunca descartadas em silêncio | [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) seção Baseline; `filter.Apply` |
 
 ---
 
@@ -229,10 +229,10 @@ quorum scan ./k8s --type k8s --format json -o quorum.json
 
 ## 9. Premissas
 
-- **Versão.** Documento alinhado à v0.2.3; flags, exit codes e comandos refletem [`cmd/quorum/scan.go`](../cmd/quorum/scan.go) e [`cmd/quorum/root.go`](../cmd/quorum/root.go) lidos no momento da redação.
+- **Versão.** Documento alinhado à v0.2.3; flags, exit codes e comandos refletem [`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go) e [`cmd/quorum/root.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/root.go) lidos no momento da redação.
 - **Escopo de produto.** O Quorum é CLI/Docker only. Não há frontend web, banco de dados relacional, API REST HTTP, autenticação/contas de usuário nem IA/LLM. Itens correspondentes em templates enterprise são tratados como **N/A** por decisão de arquitetura (orquestrador *stateless* que se integra a CI/CD, não um serviço).
-- **Runtime security é N/A no presente.** Modelo de *stream* (Falco/Tetragon) está fora de escopo; aparece apenas como proposta futura no roadmap do [`README.md`](../README.md)/[`DESIGN.md`](../DESIGN.md).
+- **Runtime security é N/A no presente.** Modelo de *stream* (Falco/Tetragon) está fora de escopo; aparece apenas como proposta futura no roadmap do [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md)/[`DESIGN.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md).
 - **Dependência opcional de rede.** A resolução de aliases via OSV.dev é opcional e degrada graciosamente; `--offline` a desabilita. O scan **não depende** de conectividade para concluir.
-- **Catálogos ilustrativos.** Os números AVD/CKV e UUIDs de KICS no crosswalk de exemplo são ilustrativos do formato e devem ser conferidos contra os catálogos oficiais antes de produção (conforme nota no [`README.md`](../README.md) e [`DESIGN.md` §8](../DESIGN.md)).
+- **Catálogos ilustrativos.** Os números AVD/CKV e UUIDs de KICS no crosswalk de exemplo são ilustrativos do formato e devem ser conferidos contra os catálogos oficiais antes de produção (conforme nota no [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) e [`DESIGN.md` §8](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)).
 - **Cadeia de suprimentos como fronteira de confiança.** Binários de scanner embutidos na imagem `:full` fazem parte do *trust boundary*; para produção, recomenda-se pinar por digest e verificar assinaturas/atestações.
 - **`confidence`/`correlationKey` determinísticos.** Os valores de confiança e as chaves de correlação são funções dos dados normalizados; mudanças de versão de scanner podem alterar a entrada e, consequentemente, a saída.

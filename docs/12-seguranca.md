@@ -16,8 +16,8 @@ Mitigação, Recomendação e Ferramentas sugeridas. Onde um framework não se a
 escopo CLI/Docker (MASVS, OWASP LLM Top 10, MITRE ATLAS), declara-se **N/A** com
 justificativa técnica.
 
-Cross-links: [Arquitetura](04-arquitetura.md) · [Operação/CI](10-operacao.md) ·
-[Supply Chain & Releases](13-supply-chain.md) · `DESIGN.md` (§12 CLI & Docker, §14 Riscos).
+Cross-links: [Arquitetura](04-arquitetura.md) · [Operação/CI](11-devops.md) ·
+[Supply Chain & Releases](10-infraestrutura.md) · `DESIGN.md` (§12 CLI & Docker, §14 Riscos).
 
 ---
 
@@ -624,7 +624,7 @@ quadrantChart
 - "Mitigado/Parcial/Gap" refletem o estado do código lido; afirmações sobre cosign, SLSA,
   GHCR `:full`/`:slim`, GoReleaser e tag `v0` baseiam-se no `action.yml` e nas premissas de
   distribuição descritas no enunciado/README (workflows de release não foram exaustivamente
-  auditados nesta seção — ver [Supply Chain](13-supply-chain.md)).
+  auditados nesta seção — ver [Supply Chain](10-infraestrutura.md)).
 - Assume-se que o relatório SARIF pode ser consumido por UIs de terceiros (GitHub code
   scanning), o que motiva a recomendação de sanitização de campos textuais (R2).
 - Frameworks marcados **N/A** (MASVS, OWASP LLM Top 10, MITRE ATLAS, e a maioria do PCI DSS)

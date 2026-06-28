@@ -90,9 +90,9 @@ Workflows reais do repositório:
 
 | Workflow | Gatilho | Jobs / passos | Duração estimada* |
 |---|---|---|---|
-| [`ci.yml`](../.github/workflows/ci.yml) | push em `main`, PRs | `go vet`, `go test -race`, build, smoke | ~3–6 min |
-| [`e2e.yml`](../.github/workflows/e2e.yml) | push/PR, dispatch | instala trivy+grype+checkov, `grype db update`, scans de consenso (IaC + SCA) | ~6–12 min |
-| [`release.yml`](../.github/workflows/release.yml) | tag semver `vX.Y.Z`, dispatch | matrix `full`/`slim` (Buildx+QEMU, cosign, SLSA) + GoReleaser (binários) | ~15–30 min |
+| [`ci.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/ci.yml) | push em `main`, PRs | `go vet`, `go test -race`, build, smoke | ~3–6 min |
+| [`e2e.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/e2e.yml) | push/PR, dispatch | instala trivy+grype+checkov, `grype db update`, scans de consenso (IaC + SCA) | ~6–12 min |
+| [`release.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/release.yml) | tag semver `vX.Y.Z`, dispatch | matrix `full`/`slim` (Buildx+QEMU, cosign, SLSA) + GoReleaser (binários) | ~15–30 min |
 
 \* Estimativas de ordem de grandeza em runner `ubuntu-latest`. O `e2e.yml` e o `release.yml`
 são mais caros porque baixam scanners, atualizam o grype DB e fazem build multi-arch com QEMU
@@ -182,7 +182,7 @@ de eventos, dashboards). **Fora do escopo do Quorum v0.2.x.**
 
 | Item | Valor |
 |---|---|
-| Licença do projeto | **Apache License 2.0** (ver [`LICENSE`](../LICENSE)) |
+| Licença do projeto | **Apache License 2.0** (ver [`LICENSE`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/LICENSE)) |
 | Custo de uso/redistribuição | **US$ 0** — permissiva, royalty-free, com grant de patentes |
 | Obrigações | Manter avisos de copyright/licença; declarar modificações; (se houver) incluir `NOTICE` |
 
@@ -192,7 +192,7 @@ patente explícita (cláusula 3). Custo monetário de licenciamento do Quorum: *
 ### 5.2 Licenças dos scanners empacotados
 
 O Quorum orquestra scanners OSS de terceiros. Cada um tem **sua própria licença**; o Quorum os
-**invoca como processos externos** (via `os/exec`, ver [`internal/adapter/adapter.go`](../internal/adapter/adapter.go)) e
+**invoca como processos externos** (via `os/exec`, ver [`internal/adapter/adapter.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/adapter.go)) e
 os **empacota** na imagem `:full`. As licenças abaixo são **estimativas baseadas no
 conhecimento público de cada projeto** e **devem ser confirmadas** no upstream antes de
 qualquer redistribuição comercial (ver gaps).
@@ -391,6 +391,6 @@ pie showData
   geografia/senioridade; tratar como ordem de grandeza.
 - **Licenças dos scanners** foram declaradas como _estimativas_ (Apache-2.0 na maioria) e
   **devem ser confirmadas no upstream** antes de redistribuição comercial. A licença **do
-  Quorum** é confirmada como **Apache-2.0** via [`LICENSE`](../LICENSE).
+  Quorum** é confirmada como **Apache-2.0** via [`LICENSE`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/LICENSE).
 - **Sem runtime hospedado**: o produto roda no CI/estação do consumidor; custos de operação de
   varredura são do **consumidor**, fora do escopo do orçamento do projeto.

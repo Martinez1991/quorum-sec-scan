@@ -4,7 +4,7 @@ Este documento descreve o **modelo de dados do Quorum** (`quorum-sec-scan`, v0.2
 
 Como o Quorum **não possui banco de dados** (ver [§1](#1-não-há-rdbms--justificativa)), "modelo de dados" aqui significa o **modelo de domínio**: um conjunto de `struct`s Go imutáveis durante o pipeline, com três projeções de persistência (SARIF/JSON/XML) geradas a cada execução. Este documento cobre os três níveis clássicos de modelagem — **Conceitual**, **Lógico** e **Físico** — adaptados a esse contexto, com diagramas Mermaid, invariantes e checklists.
 
-> Fontes verificadas no código: [`internal/model/model.go`](../internal/model/model.go), [`internal/correlate/key.go`](../internal/correlate/key.go), [`internal/correlate/correlate.go`](../internal/correlate/correlate.go), [`internal/consensus/consensus.go`](../internal/consensus/consensus.go), [`internal/orchestrator/orchestrator.go`](../internal/orchestrator/orchestrator.go), [`internal/report/{sarif,json,xml}.go`](../internal/report/), [`internal/severity/severity.go`](../internal/severity/severity.go), [`internal/purl/purl.go`](../internal/purl/purl.go), [`internal/adapter/adapter.go`](../internal/adapter/adapter.go).
+> Fontes verificadas no código: [`internal/model/model.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/model/model.go), [`internal/correlate/key.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/correlate/key.go), [`internal/correlate/correlate.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/correlate/correlate.go), [`internal/consensus/consensus.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/consensus/consensus.go), [`internal/orchestrator/orchestrator.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/orchestrator/orchestrator.go), [`internal/report/{sarif,json,xml}.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/), [`internal/severity/severity.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/severity/severity.go), [`internal/purl/purl.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/purl/purl.go), [`internal/adapter/adapter.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/adapter.go).
 
 ---
 
@@ -238,7 +238,7 @@ classDiagram
 | `INFO` | 1 | "INFO"/"INFORMATIONAL"/"NEGLIGIBLE"; Dockle "PASS/SKIP/IGNORE" |
 | `UNKNOWN` | 0 | CVSS = 0; "UNKNOWN"/"NONE"/vazio; rótulo não reconhecido |
 
-A normalização vive em [`internal/severity/severity.go`](../internal/severity/severity.go): `FromCVSS`, `FromLabel`, `FromDockle`, mais utilitários `Max`, `AtLeast` (usado por `--fail-on`/`--min-severity`) e `Parse`. `Rank()` torna a escala ordenável para agregação e ordenação de relatório.
+A normalização vive em [`internal/severity/severity.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/severity/severity.go): `FromCVSS`, `FromLabel`, `FromDockle`, mais utilitários `Max`, `AtLeast` (usado por `--fail-on`/`--min-severity`) e `Parse`. `Rank()` torna a escala ordenável para agregação e ordenação de relatório.
 
 ### 3.3 Atributos de `Finding` (entidade central)
 
@@ -308,7 +308,7 @@ Estas são as restrições que substituem as *constraints* de um RDBMS. Não há
 
 ## 4. `correlationKey` e `Fingerprint` (identidade)
 
-A "chave primária" do domínio é o **`correlationKey`**, uma função **pura e determinística** do conteúdo normalizado do finding, definida em [`internal/correlate/key.go`](../internal/correlate/key.go). **Não há chave universal**: cada `FindingType` tem sua estratégia, refletindo o fato de que "equivalência" significa coisas diferentes para um CVE e para uma má-config de Terraform.
+A "chave primária" do domínio é o **`correlationKey`**, uma função **pura e determinística** do conteúdo normalizado do finding, definida em [`internal/correlate/key.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/correlate/key.go). **Não há chave universal**: cada `FindingType` tem sua estratégia, refletindo o fato de que "equivalência" significa coisas diferentes para um CVE e para uma má-config de Terraform.
 
 ### 4.1 Pipeline de identidade
 
@@ -358,7 +358,7 @@ Enriquecimento e *keying* acontecem em `Correlator.Enrich`; o **agrupamento** é
 
 ## 5. Consenso e `MergedFinding`
 
-O `consensus.Merge` ([`internal/consensus/consensus.go`](../internal/consensus/consensus.go)) agrupa `Finding`s por `CorrelationKey` e produz `MergedFinding`s pontuados. **Contagem bruta de detecções não é confiança** — diversidade de engine, severidade e confirmação autoritativa também pesam (DESIGN §9).
+O `consensus.Merge` ([`internal/consensus/consensus.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/consensus/consensus.go)) agrupa `Finding`s por `CorrelationKey` e produz `MergedFinding`s pontuados. **Contagem bruta de detecções não é confiança** — diversidade de engine, severidade e confirmação autoritativa também pesam (DESIGN §9).
 
 ### 5.1 Fórmula de `Confidence`
 
@@ -406,7 +406,7 @@ No nível físico, o "armazenamento" do Quorum é (a) o **layout de structs Go e
 
 ### 6.1 Físico em memória — structs Go
 
-As definições canônicas estão em [`internal/model/model.go`](../internal/model/model.go). Pontos físicos relevantes:
+As definições canônicas estão em [`internal/model/model.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/model/model.go). Pontos físicos relevantes:
 
 - `Finding.Raw map[string]any` tem tag `json:"-"` → **nunca serializado**; existe só para depuração/adapters.
 - `Result.Findings` tem tag `json:"-"` → os findings brutos **não** vão para o relatório padrão; o relatório expõe `Merged` (renomeado para `findings` no JSON). Origem: `orchestrator.Result`.
@@ -417,9 +417,9 @@ As definições canônicas estão em [`internal/model/model.go`](../internal/mod
 
 | Formato | Reporter | Papel | Forma |
 |---|---|---|---|
-| **SARIF 2.1.0** | [`sarif.go`](../internal/report/sarif.go) | **Primário** — GitHub Code Scanning | `runs[].results[]` com `partialFingerprints["quorum/v1"]` |
-| **JSON** | [`json.go`](../internal/report/json.go) | Integração genérica / detalhe | `{tool, version, target, scanners, summary, findings}` (`findings` = dump de `[]MergedFinding`) |
-| **XML** | [`xml.go`](../internal/report/xml.go) | Pipelines legados/JUnit-like | `<quorumReport>` espelhando o JSON |
+| **SARIF 2.1.0** | [`sarif.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/sarif.go) | **Primário** — GitHub Code Scanning | `runs[].results[]` com `partialFingerprints["quorum/v1"]` |
+| **JSON** | [`json.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/json.go) | Integração genérica / detalhe | `{tool, version, target, scanners, summary, findings}` (`findings` = dump de `[]MergedFinding`) |
+| **XML** | [`xml.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/xml.go) | Pipelines legados/JUnit-like | `<quorumReport>` espelhando o JSON |
 
 #### 6.2.1 Mapeamento canônico → SARIF
 
@@ -434,7 +434,7 @@ As definições canônicas estão em [`internal/model/model.go`](../internal/mod
 | `DetectedBy`, `DetectionCount`, `Confidence` (arredondado 2 casas), `Severity`, `CorrelationKey`, `Unmapped` | `result.properties` |
 | `Result.Target.Ref` + resumo de scanners | `run.properties` |
 
-> **Nota de versão:** `report.Version` (namespace do fingerprint e versão do driver SARIF) está fixado em `"0.1.0"` no código ([`sarif.go`](../internal/report/sarif.go) linha 13), distinto da versão do produto (v0.2.3). Ver [Gaps](#gaps).
+> **Nota de versão:** `report.Version` (namespace do fingerprint e versão do driver SARIF) está fixado em `"0.1.0"` no código ([`sarif.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/sarif.go) linha 13), distinto da versão do produto (v0.2.3). Ver [Gaps](#gaps).
 
 #### 6.2.2 Estrutura do JSON
 

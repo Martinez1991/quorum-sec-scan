@@ -18,9 +18,9 @@ OpenAPI/HTTP, registramos **N/A** com justificativa técnica e entregamos no lug
 **JSON Schema** do output JSON e a **interface declarativa do `action.yml`**.
 
 Referências de código (fonte da verdade desta página):
-[`cmd/quorum/scan.go`](../cmd/quorum/scan.go), [`cmd/quorum/root.go`](../cmd/quorum/root.go),
-[`internal/report/`](../internal/report), [`internal/orchestrator/orchestrator.go`](../internal/orchestrator/orchestrator.go),
-[`internal/model/model.go`](../internal/model/model.go), [`action.yml`](../action.yml).
+[`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go), [`cmd/quorum/root.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/root.go),
+[`internal/report/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report), [`internal/orchestrator/orchestrator.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/orchestrator/orchestrator.go),
+[`internal/model/model.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/model/model.go), [`action.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/action.yml).
 
 ---
 
@@ -30,8 +30,8 @@ Referências de código (fonte da verdade desta página):
 | --- | --- | --- |
 | Endpoint HTTP / REST | **N/A** | Não existe servidor, daemon ou _listener_ de rede. O binário roda, produz o relatório e termina. O `root.go` declara explicitamente "No panel, no daemon". |
 | Especificação OpenAPI/Swagger | **N/A** | Não há superfície HTTP a descrever. O contrato equivalente é a **CLI** (esta página) + o **JSON Schema do output** (§7) + a **interface do `action.yml`** (§8). |
-| Autenticação / OAuth / API keys | **N/A** | Sem contas, sem sessão, sem multi-tenant. A única credencial relevante é a verificação **keyless cosign (OIDC)** da imagem na Action — não é autenticação de usuário. Ver [12-supply-chain.md](12-supply-chain.md). |
-| _Rate limiting_ de API | **N/A para a CLI**; aplica-se de forma indireta ao OSV.dev | A CLI não impõe nem sofre _rate limit_ próprio. O único acesso de rede é a resolução de aliases via OSV.dev, com **degradação graciosa** em falha/limite e desligamento total via `--offline`. Ver §5 e [05-alias-e-osv.md](05-alias-e-osv.md). |
+| Autenticação / OAuth / API keys | **N/A** | Sem contas, sem sessão, sem multi-tenant. A única credencial relevante é a verificação **keyless cosign (OIDC)** da imagem na Action — não é autenticação de usuário. Ver [10-infraestrutura.md](10-infraestrutura.md). |
+| _Rate limiting_ de API | **N/A para a CLI**; aplica-se de forma indireta ao OSV.dev | A CLI não impõe nem sofre _rate limit_ próprio. O único acesso de rede é a resolução de aliases via OSV.dev, com **degradação graciosa** em falha/limite e desligamento total via `--offline`. Ver §5 e [07-persistencia-e-artefatos.md](07-persistencia-e-artefatos.md). |
 | Versionamento de API | Aplica-se como **versionamento por release/semver** + **schema `quorum/v1`** | Ver §9. |
 
 > A rede só é tocada para enriquecimento de aliases (OSV.dev) e, no contexto da Action,
@@ -85,7 +85,7 @@ flowchart LR
 
 > Princípio operacional: o exit code é o **mecanismo de gating em CI**. `0` não significa
 > "seguro" — significa "nada cruzou o limiar". O próprio _summary_ reforça: _"0 findings is
-> not proof of safety"_. Ver [07-orchestrator-e-status.md](07-orchestrator-e-status.md).
+> not proof of safety"_. Ver [09-backend.md](09-backend.md).
 
 ---
 
@@ -104,7 +104,7 @@ quorum scan <target> [flags]
 
 ### 4.2 Entradas — flags
 
-Definidas em [`cmd/quorum/scan.go`](../cmd/quorum/scan.go) (`newScanCmd`):
+Definidas em [`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go) (`newScanCmd`):
 
 | Flag | Curta | Tipo | Default | Descrição / validação |
 | --- | --- | --- | --- | --- |
@@ -123,7 +123,7 @@ Definidas em [`cmd/quorum/scan.go`](../cmd/quorum/scan.go) (`newScanCmd`):
 
 > **Nota sobre o _probe_ de versão**: o _timeout_ de _probe_ (60s, `Options.ProbeTime`) é
 > uma constante interna do orchestrator e **não é exposto como flag** nesta versão. Distingue
-> _timeout_ / killed(OOM) / não-instalado. Ver [07-orchestrator-e-status.md](07-orchestrator-e-status.md).
+> _timeout_ / killed(OOM) / não-instalado. Ver [09-backend.md](09-backend.md).
 
 ### 4.3 Entradas — variáveis de ambiente
 
@@ -202,7 +202,7 @@ docker run --rm -v "$PWD:/work" -w /work \
 - `--offline` desliga completamente o acesso de rede do resolvedor (`osv` fica `nil` em
   `runScan`). Em ambientes de CI _air-gapped_, é a flag a usar.
 
-Detalhes em [05-alias-e-osv.md](05-alias-e-osv.md).
+Detalhes em [07-persistencia-e-artefatos.md](07-persistencia-e-artefatos.md).
 
 ---
 
@@ -233,8 +233,8 @@ trivy        [VULN MISCONFIG SECRET]
 
 > Os tipos exatos por scanner vêm de cada adapter (`Capabilities()`). A tabela acima é
 > ilustrativa da **forma** da saída — consulte os adapters em
-> [`internal/adapter/`](../internal/adapter) para a lista canônica e
-> [04-adapters.md](04-adapters.md).
+> [`internal/adapter/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter) para a lista canônica e
+> [09-backend.md](09-backend.md).
 
 ### 6.3 Exit codes
 
@@ -257,7 +257,7 @@ flowchart LR
 
 ### 7.1 SARIF (primário) — `--format sarif`
 
-Fonte: [`internal/report/sarif.go`](../internal/report/sarif.go).
+Fonte: [`internal/report/sarif.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/sarif.go).
 
 - `$schema`: `https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json`
 - `version`: `2.1.0`
@@ -333,7 +333,7 @@ Exemplo (recortado):
 
 ### 7.2 JSON — `--format json`
 
-Fonte: [`internal/report/json.go`](../internal/report/json.go). _Encoder_ com indentação de
+Fonte: [`internal/report/json.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/json.go). _Encoder_ com indentação de
 2 espaços e `SetEscapeHTML(false)`.
 
 Forma estável (`jsonReport`):
@@ -503,7 +503,7 @@ Este é o contrato formal do output JSON. Reflete `jsonReport`, `ScannerRun` e `
 
 ### 7.3 XML — `--format xml`
 
-Fonte: [`internal/report/xml.go`](../internal/report/xml.go). Espelha a estrutura JSON para
+Fonte: [`internal/report/xml.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/xml.go). Espelha a estrutura JSON para
 pipelines _legacy_/JUnit-like. Cabeçalho `xml.Header`, indentação de 2 espaços.
 
 Forma (`quorumReport`):
@@ -551,7 +551,7 @@ no `<scanner>` só quando presente; locations deduplicadas por arquivo.
 
 ## 8. Interface da GitHub Action (`action.yml`) — substituto do "contrato de API"
 
-Fonte: [`action.yml`](../action.yml). Tipo **composite**. Disponível a partir de v0.2.1+;
+Fonte: [`action.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/action.yml). Tipo **composite**. Disponível a partir de v0.2.1+;
 _pin_ via tag móvel `v0`. A Action embrulha a imagem `:full` (self-contained) e, por padrão,
 **verifica a assinatura cosign** antes de rodar.
 
@@ -610,7 +610,7 @@ cosign verify "${IMAGE}" \
 
 Isto valida a **assinatura keyless OIDC** emitida pelo workflow de release. A atestação
 **SLSA build-provenance** complementa a cadeia no momento do release. Ver
-[12-supply-chain.md](12-supply-chain.md).
+[10-infraestrutura.md](10-infraestrutura.md).
 
 ### 8.4 Exemplo de uso
 
@@ -668,7 +668,7 @@ jobs:
 > **Compatibilidade do fingerprint:** como `Fingerprint = sha256(correlationKey)` e o
 > `correlationKey` é determinístico por tipo, qualquer mudança na construção da chave **muda
 > os fingerprints** e, portanto, é tratada como quebra do contrato `quorum/v1`. Ver
-> [DESIGN.md](../DESIGN.md) §6 (matriz de correlação).
+> [DESIGN.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) §6 (matriz de correlação).
 
 ---
 
@@ -714,6 +714,6 @@ flowchart LR
    devem se ajustar.
 5. **Variáveis de ambiente:** assumimos que a CLI não faz binding env→flag próprio; o único
    uso de env é indireto (`os.UserCacheDir`) e dentro do shell da Action.
-6. **Cross-links:** os arquivos `04-adapters.md`, `05-alias-e-osv.md`, `07-orchestrator-e-status.md`
-   e `12-supply-chain.md` são referenciados por convenção de numeração; podem ainda não existir
+6. **Cross-links:** os arquivos `09-backend.md`, `07-persistencia-e-artefatos.md`, `09-backend.md`
+   e `10-infraestrutura.md` são referenciados por convenção de numeração; podem ainda não existir
    no momento desta escrita.

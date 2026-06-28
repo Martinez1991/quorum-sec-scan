@@ -1,7 +1,7 @@
 # Backlog
 
 Backlog acionável do **Quorum** (`quorum-sec-scan`, v0.2.3) derivado do roadmap oficial
-([`README.md`](../README.md) §Roadmap e [`DESIGN.md` §13](../DESIGN.md)) e das lacunas
+([`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) §Roadmap e [`DESIGN.md` §13](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)) e das lacunas
 observadas no código-fonte (limitações conhecidas, itens de v1.0 ainda não implementados e
 oportunidades de *hardening* e UX). O backlog está organizado de forma hierárquica
 **Epic → Feature → User Story → Task → Subtask**, com **Critérios de Aceitação**,
@@ -11,10 +11,10 @@ oportunidades de *hardening* e UX). O backlog está organizado de forma hierárq
 > documentado em [01-visao-geral.md](01-visao-geral.md) e [10-infraestrutura.md](10-infraestrutura.md).
 > Tudo aqui marcado como "proposta futura" **não existe ainda** no código; é backlog.
 >
-> Referências de código verificadas: [`cmd/quorum/scan.go`](../cmd/quorum/scan.go),
-> [`internal/cache/store.go`](../internal/cache/store.go),
-> [`internal/adapter/`](../internal/adapter), [`internal/report/`](../internal/report),
-> [`DESIGN.md`](../DESIGN.md), [`README.md`](../README.md).
+> Referências de código verificadas: [`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go),
+> [`internal/cache/store.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/cache/store.go),
+> [`internal/adapter/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter), [`internal/report/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report),
+> [`DESIGN.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md), [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md).
 
 ---
 
@@ -55,9 +55,9 @@ flowchart LR
 
 ### 1.4 Definição de Pronto (DoD) — aplica-se a toda User Story
 
-- [ ] Código segue a interface canônica (adapters não calculam `correlationKey` — [`DESIGN.md` §5](../DESIGN.md)).
+- [ ] Código segue a interface canônica (adapters não calculam `correlationKey` — [`DESIGN.md` §5](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)).
 - [ ] Testes unitários cobrindo o caminho feliz e a degradação graciosa.
-- [ ] Para adapters: **teste de contrato** contra fixture versionada em [`internal/adapter/testdata`](../internal/adapter/testdata).
+- [ ] Para adapters: **teste de contrato** contra fixture versionada em [`internal/adapter/testdata`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/testdata).
 - [ ] `make test`, `make vet` e `make build` verdes.
 - [ ] Documentação atualizada (README + doc relevante em `docs/`).
 - [ ] Princípio preservado: *false split > false merge*; *"0 findings is not proof of safety"*.
@@ -93,15 +93,15 @@ flowchart TB
 
 | Epic | Tema | Origem | Prioridade dominante |
 |------|------|--------|----------------------|
-| **E1** | Novos adapters (Polaris, Conftest/OPA, Syft/SBOM, Hadolint) | Roadmap v0.3/v1.0; [`DESIGN.md` §13](../DESIGN.md) | Must/Should |
+| **E1** | Novos adapters (Polaris, Conftest/OPA, Syft/SBOM, Hadolint) | Roadmap v0.3/v1.0; [`DESIGN.md` §13](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) | Must/Should |
 | **E2** | Observabilidade (logs estruturados, métricas, *run summary* JSON) | Lacuna (hoje só stderr humano) | Should |
 | **E3** | SBOM e relatórios (CycloneDX/SPDX, HTML, sarif rollups) | Roadmap (Syft p/ SBOM); lacuna de formatos | Should/Could |
 | **E4** | Policy-as-code (OPA/Conftest como camada opcional) | Roadmap v1.0 | Should |
-| **E5** | Cache persistente (TTL, expurgo, cache de findings/SBOM) | Roadmap v1.0; [`internal/cache/store.go`](../internal/cache/store.go) | Must |
-| **E6** | Hardening de segurança (pin por digest, SBOM da própria imagem, SLSA L3) | [`DESIGN.md` §12/§14](../DESIGN.md) | Must |
+| **E5** | Cache persistente (TTL, expurgo, cache de findings/SBOM) | Roadmap v1.0; [`internal/cache/store.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/cache/store.go) | Must |
+| **E6** | Hardening de segurança (pin por digest, SBOM da própria imagem, SLSA L3) | [`DESIGN.md` §12/§14](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) | Must |
 | **E7** | UX / CLI (saída TTY, `--diff`/baseline auto, `explain`, perfis) | Lacuna de UX | Should/Could |
-| **E8** | Action / distribuição (perfis de imagem, action versionada, GitLab/Azure) | Roadmap (perfis); [`action.yml`](../action.yml) | Should/Could |
-| **E9** | Runtime security (Falco/Tetragon) | [`DESIGN.md` §2/§13](../DESIGN.md) — **fora de escopo** | Won't (agora) |
+| **E8** | Action / distribuição (perfis de imagem, action versionada, GitLab/Azure) | Roadmap (perfis); [`action.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/action.yml) | Should/Could |
+| **E9** | Runtime security (Falco/Tetragon) | [`DESIGN.md` §2/§13](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) — **fora de escopo** | Won't (agora) |
 
 ---
 
@@ -141,13 +141,13 @@ flowchart TB
 
 > **Objetivo:** ampliar o *pool* de scanners mantendo a interface `Adapter`
 > (`Name/Version/Supports/Capabilities/Run`) e o contrato de teste por fixture
-> ([`internal/adapter/adapter.go`](../internal/adapter/adapter.go), [`DESIGN.md` §5](../DESIGN.md)).
+> ([`internal/adapter/adapter.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/adapter.go), [`DESIGN.md` §5](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)).
 > **Invariante:** o novo adapter emite `model.Finding` canônico e **não** calcula `correlationKey`.
 
 ### Feature F-1.1 — Adapter Polaris (K8s posture) · **Must** · 8 SP
 
-Polaris foi explicitamente prometido na fase v0.3 do roadmap ([`DESIGN.md` §13](../DESIGN.md))
-e ainda não tem adapter em [`internal/adapter/`](../internal/adapter).
+Polaris foi explicitamente prometido na fase v0.3 do roadmap ([`DESIGN.md` §13](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md))
+e ainda não tem adapter em [`internal/adapter/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter).
 
 #### User Story US-1.1.1
 
@@ -161,7 +161,7 @@ e ainda não tem adapter em [`internal/adapter/`](../internal/adapter).
 - [ ] `quorum scan ./k8s --type k8s --scanners kubescape,polaris` produz, para um manifest
       com privilégio elevado, um `MergedFinding` com `detectedBy: [kubescape, polaris]` e
       `detectionCount: 2`.
-- [ ] Severidade do Polaris é normalizada pela tabela única ([`DESIGN.md` §10](../DESIGN.md)).
+- [ ] Severidade do Polaris é normalizada pela tabela única ([`DESIGN.md` §10](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)).
 - [ ] Crosswalk mapeia check do Polaris → `canonicalControl` (categoria como fallback).
 - [ ] Polaris ausente no PATH → status `unavailable` (scan não falha).
 - [ ] Teste de contrato contra fixture `testdata/k8s_polaris.json` versionada.
@@ -191,7 +191,7 @@ e ainda não tem adapter em [`internal/adapter/`](../internal/adapter).
 - [ ] Violações viram `Finding` de tipo `MISCONFIG` (ou novo `POLICY`) com `CanonicalControl`
       derivado do nome da política.
 - [ ] Usuário traz suas regras via flag (ex.: `--policy ./policies`) — Quorum **não** embute
-      políticas opinativas (conforme [`DESIGN.md` §2](../DESIGN.md): "usuário traz regras").
+      políticas opinativas (conforme [`DESIGN.md` §2](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md): "usuário traz regras").
 - [ ] Sem políticas configuradas → adapter `skipped`, não `error`.
 
 **Dependências:** F-4.1 (define a superfície de policy-as-code).
@@ -201,7 +201,7 @@ e ainda não tem adapter em [`internal/adapter/`](../internal/adapter).
 
 ### Feature F-1.3 — Adapter Syft (SBOM nativo) · **Should** · 8 SP
 
-O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há adapter.
+O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)); ainda não há adapter.
 
 #### User Story US-1.3.1
 
@@ -239,7 +239,7 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 ## 5. Epic E2 — Observabilidade
 
 > **Estado atual:** o único "observável" é o resumo humano em `stderr`
-> (`printSummary` em [`cmd/quorum/scan.go`](../cmd/quorum/scan.go)) e logs `[quorum] …`
+> (`printSummary` em [`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go)) e logs `[quorum] …`
 > controlados por `--quiet`. Não há log estruturado nem saída de telemetria.
 
 ### Feature F-2.1 — Logs estruturados · **Should** · 5 SP
@@ -277,7 +277,7 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 - [ ] O conteúdo espelha exatamente o `printSummary` atual (fonte única de verdade).
 - [ ] Ausência da flag = comportamento atual inalterado.
 
-**Dependências:** reusa `orchestrator.Result` ([`cmd/quorum/scan.go`](../cmd/quorum/scan.go)).
+**Dependências:** reusa `orchestrator.Result` ([`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go)).
 
 ### Feature F-2.3 — Métricas opcionais · **Could** · 8 SP
 
@@ -301,7 +301,7 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 
 ## 6. Epic E3 — SBOM e relatórios
 
-> **Estado atual:** três reporters — SARIF/JSON/XML ([`internal/report/`](../internal/report)).
+> **Estado atual:** três reporters — SARIF/JSON/XML ([`internal/report/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report)).
 > Não há SBOM export nem relatório legível por humanos (HTML).
 
 ### Feature F-3.1 — Export SBOM (CycloneDX/SPDX) · **Should** · 8 SP
@@ -347,8 +347,8 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 
 - [ ] `rules[].properties["security-severity"]` derivado do CVSS/severidade.
 - [ ] `rules[].help.text` com origem (`detectedBy`) e link do controle canônico (AVD/CIS) quando houver.
-- [ ] `partialFingerprints["quorum/v1"]` preservado (sem regressão de dedup — [`DESIGN.md` §11](../DESIGN.md)).
-- [ ] Teste atualizado em [`internal/report/report_test.go`](../internal/report/report_test.go).
+- [ ] `partialFingerprints["quorum/v1"]` preservado (sem regressão de dedup — [`DESIGN.md` §11](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)).
+- [ ] Teste atualizado em [`internal/report/report_test.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/report_test.go).
 
 ---
 
@@ -356,7 +356,7 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 
 > Roadmap v1.0: "OPA/Conftest policy-as-code layer". Princípio do design: OPA/Conftest
 > **não** é "scanner", é camada **opcional** em que **o usuário traz as regras**
-> ([`DESIGN.md` §2](../DESIGN.md)).
+> ([`DESIGN.md` §2](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)).
 
 ### Feature F-4.1 — Camada policy-as-code · **Should** · 13 SP
 
@@ -390,14 +390,14 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 
 - [ ] YAML declarativo: regras como `{type: VULN, minSeverity: HIGH, minConfidence: 0.7 → fail}`.
 - [ ] Convive com `--fail-on` (a flag continua funcionando; YAML refina).
-- [ ] Exit codes inalterados (`0/1/2`, [`README.md`](../README.md) §Exit codes).
+- [ ] Exit codes inalterados (`0/1/2`, [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) §Exit codes).
 
 ---
 
 ## 8. Epic E5 — Cache persistente
 
 > **Estado atual:** já existe um cache JSON persistente para aliases
-> ([`internal/cache/store.go`](../internal/cache/store.go)): map `id→canonical`, *flush* atômico,
+> ([`internal/cache/store.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/cache/store.go)): map `id→canonical`, *flush* atômico,
 > tolerante a falha. **Lacunas:** sem TTL/expiração, sem versionamento de schema, sem cache de
 > SBOM/findings por digest. O roadmap v1.0 lista "persistent alias cache" como meta.
 
@@ -443,7 +443,7 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 
 ## 9. Epic E6 — Hardening de segurança
 
-> Fonte: [`DESIGN.md` §12/§14](../DESIGN.md) e [`README.md`](../README.md) §"Security of the chain itself".
+> Fonte: [`DESIGN.md` §12/§14](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) e [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) §"Security of the chain itself".
 > O `:full` hoje pina scanners **por versão**; o design recomenda **digest imutável** + verificação.
 
 ### Feature F-6.1 — Pin de scanners por `@sha256` + verificação · **Must** · 8 SP
@@ -456,10 +456,10 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 
 **Critérios de Aceitação**
 
-- [ ] [`Dockerfile.full`](../Dockerfile.full) referencia cada ferramenta por `@sha256:<digest>` (não tag móvel).
+- [ ] [`Dockerfile.full`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/Dockerfile.full) referencia cada ferramenta por `@sha256:<digest>` (não tag móvel).
 - [ ] Build valida checksum de cada binário baixado (falha o build em divergência).
 - [ ] Documentado em [10-infraestrutura.md](10-infraestrutura.md) e na seção de supply chain do README.
-- [ ] CI [`release.yml`](../.github/workflows/release.yml) continua assinando keyless (cosign) e gerando atestação SLSA.
+- [ ] CI [`release.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/release.yml) continua assinando keyless (cosign) e gerando atestação SLSA.
 
 | Task | SP | Subtasks |
 |------|----|----------|
@@ -479,7 +479,7 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 
 - [ ] `release.yml` gera SBOM (CycloneDX/SPDX) da imagem e o anexa ao GHCR.
 - [ ] Atestação SLSA build-provenance já existente permanece verificável via
-      `gh attestation verify` ([`README.md`](../README.md) §Install).
+      `gh attestation verify` ([`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) §Install).
 - [ ] `cosign verify` da assinatura keyless documentado e testado no fluxo de release.
 
 **Dependências:** F-3.1 (reuso da geração de SBOM).
@@ -504,7 +504,7 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 ## 10. Epic E7 — UX / CLI
 
 > **Estado atual:** dois comandos (`scan`, `list-scanners`); saída humana só no `stderr summary`;
-> baseline manual ([`cmd/quorum/scan.go`](../cmd/quorum/scan.go)).
+> baseline manual ([`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go)).
 
 ### Feature F-7.1 — Saída TTY legível · **Should** · 5 SP
 
@@ -532,7 +532,7 @@ O roadmap cita "Syft p/ SBOM" ([`DESIGN.md` §2](../DESIGN.md)); ainda não há 
 **Critérios de Aceitação**
 
 - [ ] Recebe um relatório JSON (`--from report.json`) + fingerprint.
-- [ ] Mostra membros, `detectedBy`, e a **decomposição** da fórmula de confiança ([`DESIGN.md` §9](../DESIGN.md)).
+- [ ] Mostra membros, `detectedBy`, e a **decomposição** da fórmula de confiança ([`DESIGN.md` §9](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md)).
 - [ ] Mensagem clara se o fingerprint não existir.
 
 **Dependências:** F-2.2 (resumo/relatório machine-readable estável).
@@ -564,9 +564,9 @@ MISCONFIG|main.tf|aws_s3_bucket|AVD-AWS-0089   # S3 logging [MEDIUM] reviewed 20
 
 ## 11. Epic E8 — Action / distribuição
 
-> **Estado atual:** Action composite ([`action.yml`](../action.yml)) que cosign-verifica e roda
+> **Estado atual:** Action composite ([`action.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/action.yml)) que cosign-verifica e roda
 > a `:full`; tags `:full` (amd64) e `:slim` (amd64+arm64); GoReleaser para binários;
-> exemplos em [`examples/ci/`](../examples/ci). Roadmap menciona **perfis de imagem**.
+> exemplos em [`examples/ci/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/examples/ci). Roadmap menciona **perfis de imagem**.
 
 ### Feature F-8.1 — Perfis de imagem `:sca`/`:iac`/`:k8s` · **Should** · 8 SP
 
@@ -608,14 +608,14 @@ MISCONFIG|main.tf|aws_s3_bucket|AVD-AWS-0089   # S3 logging [MEDIUM] reviewed 20
 
 **Critérios de Aceitação**
 
-- [ ] Novos arquivos em [`examples/ci/`](../examples/ci) para Azure e Jenkins (GitLab já existe).
+- [ ] Novos arquivos em [`examples/ci/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/examples/ci) para Azure e Jenkins (GitLab já existe).
 - [ ] Cada exemplo mostra gating por exit code, upload de artefato SARIF/JSON e `cosign verify`.
 
 ---
 
 ## 12. Epic E9 — Runtime security (produto à parte) · **Won't (agora)**
 
-> [`DESIGN.md` §2/§13](../DESIGN.md): runtime (Falco/Tetragon/Inspektor Gadget) segue **modelo de
+> [`DESIGN.md` §2/§13](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md): runtime (Falco/Tetragon/Inspektor Gadget) segue **modelo de
 > *stream***, que **não cabe** num scan estático. Mantido como **proposta futura, produto separado**.
 
 | Item | MoSCoW | Justificativa |
@@ -636,7 +636,7 @@ por decisão de arquitetura (CLI/Docker only, *stateless*). Declaração explíc
 | Item de template | Status | Justificativa técnica | Proposta futura (separada) |
 |------------------|--------|-----------------------|----------------------------|
 | Frontend web / painel | **N/A** | Não há UI/daemon; saída é relatório estático e exit code | F-3.2 (HTML estático, **não** é painel) |
-| Banco de dados relacional | **N/A** | Estado mínimo é cache JSON local ([`internal/cache/store.go`](../internal/cache/store.go)); sem persistência relacional | — |
+| Banco de dados relacional | **N/A** | Estado mínimo é cache JSON local ([`internal/cache/store.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/cache/store.go)); sem persistência relacional | — |
 | API REST HTTP / autenticação / contas | **N/A** | Ferramenta de linha de comando; sem servidor, sem multiusuário | — |
 | IA / LLM | **N/A** | `confidence` é fórmula determinística, não modelo; ver [13-ia.md](13-ia.md) | — |
 | Cloud/K8s de **runtime** | **N/A** | Quorum escaneia **manifests** (`--type k8s`), não clusters vivos | E9 (runtime, produto à parte) |
@@ -670,7 +670,7 @@ flowchart LR
 | Syft p/ SBOM | F-1.3, F-3.1 |
 | DESIGN §12/§14 — pin por digest, supply chain | F-6.1, F-6.2, F-6.3 |
 | Limitação "0 findings is not proof of safety" | F-2.2, F-3.2 (avisos), F-7.1 |
-| Limitação granularidade MISCONFIG ([`README.md`](../README.md) §Known limitations) | candidato a Epic futuro "identidade por recurso" (a refinar) |
+| Limitação granularidade MISCONFIG ([`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) §Known limitations) | candidato a Epic futuro "identidade por recurso" (a refinar) |
 | futuro — runtime | E9 (Won't) |
 
 ---
@@ -689,9 +689,9 @@ Seleção **Must** de menor risco e maior desbloqueio, ~26 SP:
 ## Premissas
 
 - **Versão de referência.** Backlog alinhado à v0.2.3; os estados *as-is* (o que já existe vs.
-  lacuna) foram conferidos no código lido: [`cmd/quorum/scan.go`](../cmd/quorum/scan.go),
-  [`internal/cache/store.go`](../internal/cache/store.go), [`internal/adapter/`](../internal/adapter),
-  [`internal/report/`](../internal/report), além de [`DESIGN.md`](../DESIGN.md) e [`README.md`](../README.md).
+  lacuna) foram conferidos no código lido: [`cmd/quorum/scan.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go),
+  [`internal/cache/store.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/cache/store.go), [`internal/adapter/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter),
+  [`internal/report/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report), além de [`DESIGN.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) e [`README.md`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md).
 - **Itens já entregues não viram backlog.** Dockle, XML e a base do cache persistente de aliases
   já existem no código (v0.2.x); por isso aparecem como "✅" na rastreabilidade e o backlog só cobre
   suas **evoluções** (ex.: TTL no cache).
@@ -708,4 +708,4 @@ Seleção **Must** de menor risco e maior desbloqueio, ~26 SP:
   `--sbom`, `--baseline-write`, `--cache-ttl` e subcomandos (`explain`, `cache prune`) são **propostas**
   de design deste backlog e ainda **não existem** no CLI atual; devem ser confirmados no refinamento.
 - **Crosswalk como dívida gerenciada.** Novos adapters de MISCONFIG/K8s dependem de entradas de
-  crosswalk; presume-se manutenção incremental (top-N controles) conforme [`DESIGN.md` §6/§14](../DESIGN.md).
+  crosswalk; presume-se manutenção incremental (top-N controles) conforme [`DESIGN.md` §6/§14](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md).

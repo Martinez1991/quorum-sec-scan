@@ -2,7 +2,7 @@
 
 Esta seção descreve a estratégia de testes do **Quorum** (`quorum-sec-scan`, v0.2.3): o que já existe no código hoje (as-is), como executar, e o que está proposto como evolução. O Quorum é uma ferramenta **CLI/Docker** de *consensus security scanning* escrita em Go 1.26; portanto, partes clássicas de um plano de testes corporativo que pressupõem frontend web, banco de dados relacional ou API REST são declaradas **N/A** com justificativa técnica. O princípio de produto "*false split > false merge*" e o axioma operacional "*0 findings is not proof of safety*" guiam também as escolhas de teste: preferimos quebrar cedo (contract tests, `-race`, gates de consenso no E2E) a passar silenciosamente.
 
-Documentos relacionados: [Arquitetura](04-arquitetura.md) · [CI/CD](13-cicd.md) · [Supply chain](14-supply-chain.md) · `DESIGN.md` (§5 contract tests, §6 matriz de correlação, §14 status de scanner).
+Documentos relacionados: [Arquitetura](04-arquitetura.md) · [CI/CD](11-devops.md) · [Supply chain](10-infraestrutura.md) · `DESIGN.md` (§5 contract tests, §6 matriz de correlação, §14 status de scanner).
 
 ---
 
@@ -54,7 +54,7 @@ go test -cover ./...                        # cobertura por pacote (resumo)
 go test -coverprofile=cover.out ./... && go tool cover -func=cover.out
 ```
 
-> O CI usa exatamente `go test -race ./...` (ver [CI/CD](13-cicd.md)), então rodar com `-race` localmente reproduz o gate.
+> O CI usa exatamente `go test -race ./...` (ver [CI/CD](11-devops.md)), então rodar com `-race` localmente reproduz o gate.
 
 ---
 

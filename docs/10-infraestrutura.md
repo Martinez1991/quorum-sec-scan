@@ -79,7 +79,7 @@ justificativa técnica.
 
 ### Proposta futura (claramente separada — NÃO implementada)
 
-Conforme [DESIGN.md](../DESIGN.md) §13, há a ideia de um **módulo runtime separado** (Falco
+Conforme [DESIGN.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) §13, há a ideia de um **módulo runtime separado** (Falco
 _ou_ Tetragon, OpenSCAP de host) como **produto à parte**, com modelo de _stream_. Caso isso
 seja construído, passaria a existir infra de runtime (agentes, coleta contínua) — mas **isso
 não faz parte do Quorum v0.2.x** e está fora do escopo deste documento.
@@ -93,12 +93,12 @@ multi-stage a partir de `golang:1.26-alpine` (compilação) e `alpine:3.20` (run
 
 | Variante | Dockerfile | Conteúdo | Plataformas | Tamanho/uso |
 |---|---|---|---|---|
-| **`:slim`** | [`Dockerfile`](../Dockerfile) | Apenas o orquestrador (binário `quorum`) + crosswalks | `linux/amd64`, `linux/arm64` | Pequena. BYO-scanners: os scanners devem estar no `PATH` (montados ou presentes no runner). |
-| **`:full`** | [`Dockerfile.full`](../Dockerfile.full) | Orquestrador + **todos** os scanners + grype DB pré-cacheado | `linux/amd64` apenas | Autossuficiente para CI. Os binários de scanner empacotados são amd64, daí a restrição de arquitetura. |
+| **`:slim`** | [`Dockerfile`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/Dockerfile) | Apenas o orquestrador (binário `quorum`) + crosswalks | `linux/amd64`, `linux/arm64` | Pequena. BYO-scanners: os scanners devem estar no `PATH` (montados ou presentes no runner). |
+| **`:full`** | [`Dockerfile.full`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/Dockerfile.full) | Orquestrador + **todos** os scanners + grype DB pré-cacheado | `linux/amd64` apenas | Autossuficiente para CI. Os binários de scanner empacotados são amd64, daí a restrição de arquitetura. |
 
 ### 3.1 Tags publicadas
 
-Geradas em [`release.yml`](../.github/workflows/release.yml) (passo _Resolve version and image name_):
+Geradas em [`release.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/release.yml) (passo _Resolve version and image name_):
 
 | Variante | Tags |
 |---|---|
@@ -167,9 +167,9 @@ efêmeros `ubuntu-latest`. Três workflows:
 
 | Workflow | Gatilho | Função |
 |---|---|---|
-| [`ci.yml`](../.github/workflows/ci.yml) | push em `main`, PRs | `go vet`, `go test -race`, build, smoke (`list-scanners`) |
-| [`e2e.yml`](../.github/workflows/e2e.yml) | (consenso end-to-end) | Validação de consenso |
-| [`release.yml`](../.github/workflows/release.yml) | tag semver `v[0-9]+.[0-9]+.[0-9]+`; `workflow_dispatch` | Build/publish/assinatura de imagens e binários |
+| [`ci.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/ci.yml) | push em `main`, PRs | `go vet`, `go test -race`, build, smoke (`list-scanners`) |
+| [`e2e.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/e2e.yml) | (consenso end-to-end) | Validação de consenso |
+| [`release.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/release.yml) | tag semver `v[0-9]+.[0-9]+.[0-9]+`; `workflow_dispatch` | Build/publish/assinatura de imagens e binários |
 
 ### 5.1 Pipeline de release (`release.yml`)
 
@@ -196,7 +196,7 @@ flowchart TD
 ```
 
 > A tag móvel `v0` (usada para pinar o **GitHub Action composite**) **NÃO** dispara release —
-> o gatilho é restrito a semver completo `vX.Y.Z`. Ver [action.yml](../action.yml) e §7.
+> o gatilho é restrito a semver completo `vX.Y.Z`. Ver [action.yml](https://github.com/Martinez1991/quorum-sec-scan/blob/main/action.yml) e §7.
 
 ### 5.2 Permissões do workflow de release
 
@@ -295,7 +295,7 @@ a identidade OIDC do `release.yml`; (3) executa
 
 ## 9. Distribuição de binários nativos (GoReleaser)
 
-Binários gerados por [`.goreleaser.yaml`](../.goreleaser.yaml) no job `binaries` do release
+Binários gerados por [`.goreleaser.yaml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.goreleaser.yaml) no job `binaries` do release
 (apenas em tag).
 
 | Item | Valor |

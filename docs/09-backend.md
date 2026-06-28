@@ -16,8 +16,8 @@ Controllers, Middlewares, Workers, Jobs, Cache, Fila/Mensageria) sobre a realida
 Quando o template pede um conceito típico de aplicações web/distribuídas que **não existe**
 neste produto, o item é marcado como **N/A** com justificativa técnica.
 
-Documentos relacionados: [Arquitetura](03-arquitetura.md) · [Modelo de dados](05-modelo-de-dados.md)
-· [CLI / Comandos](07-cli.md) · este arquivo é a referência canônica do código Go.
+Documentos relacionados: [Arquitetura](04-arquitetura.md) · [Modelo de dados](05-modelo-de-dados.md)
+· [CLI / Comandos](06-interfaces-cli-e-formatos.md) · este arquivo é a referência canônica do código Go.
 
 ---
 

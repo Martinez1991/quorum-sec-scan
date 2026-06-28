@@ -85,7 +85,7 @@ O princípio de design *"0 findings is not proof of safety"* exige que o Quorum 
 | `error` | rodou mas falhou | `a.Run` retornou erro que não é deadline |
 | `timeout` | excedeu `--timeout` por scanner | `runCtx.Err() == DeadlineExceeded` |
 
-O **probe de versão** (`Options.ProbeTime`, default **60s**) é um diagnóstico de observabilidade por si só: ele distingue *timeout* de *killed (OOM)* de *não instalado*, e gera mensagens acionáveis (ex.: "raise the container's memory limit", "scope --scanners"). Ver também [11-troubleshooting.md](11-troubleshooting.md) e a seção de status de scanner em DESIGN §14.
+O **probe de versão** (`Options.ProbeTime`, default **60s**) é um diagnóstico de observabilidade por si só: ele distingue *timeout* de *killed (OOM)* de *não instalado*, e gera mensagens acionáveis (ex.: "raise the container's memory limit", "scope --scanners"). Ver também [14-observabilidade.md](14-observabilidade.md) e a seção de status de scanner em DESIGN §14.
 
 ### 2.3 Summary no terminal
 
@@ -115,7 +115,7 @@ Os exit codes são o sinal primário consumido por pipelines (contrato em `scan.
 | `1` | Gate — algum finding `>=` `--fail-on` disparou (`os.Exit(1)`) |
 | `2` | Erro de uso/runtime |
 
-Esse é o "monitoramento" mais barato e confiável de um job: o pipeline decide passar/falhar lendo um inteiro. Ver [05-cli.md](05-cli.md) para o detalhamento das flags de gate (`--fail-on`, `--min-severity`).
+Esse é o "monitoramento" mais barato e confiável de um job: o pipeline decide passar/falhar lendo um inteiro. Ver [06-interfaces-cli-e-formatos.md](06-interfaces-cli-e-formatos.md) para o detalhamento das flags de gate (`--fail-on`, `--min-severity`).
 
 ### 2.5 Relatório como artefato auditável
 
@@ -125,7 +125,7 @@ O relatório é a **trilha de auditoria** persistente de cada execução. Em **S
 - **JSON** (`internal/report/json.go`): inclui `scanners` (os `ScannerRun`, com `status`, `version`, `findings`, `durationMs`, `error`) e os findings canônicos detalhados.
 - **XML** (`internal/report/xml.go`): expõe `status` por scanner como atributo.
 
-Como o relatório carrega **status + versão + duração por scanner + fingerprint determinístico**, ele é auto-suficiente para auditoria post-mortem, mesmo que os logs do runner já tenham expirado. Ver [09-relatorios-sarif.md](09-relatorios-sarif.md).
+Como o relatório carrega **status + versão + duração por scanner + fingerprint determinístico**, ele é auto-suficiente para auditoria post-mortem, mesmo que os logs do runner já tenham expirado. Ver [06-interfaces-cli-e-formatos.md](06-interfaces-cli-e-formatos.md).
 
 ### 2.6 Mapa dos sinais atuais
 
@@ -278,7 +278,7 @@ Checklist para integrar a observabilidade existente num pipeline:
 - [ ] **Inspecione o status por scanner**, não só a contagem de findings: um `unavailable`/`timeout`/`error` significa cobertura reduzida, não ausência de risco.
 - [ ] **Não use `--quiet` em CI** a menos que você já persista o relatório JSON/SARIF — `--quiet` remove o summary e o progresso.
 - [ ] **Trate exit code `2` como falha de infraestrutura** (uso/runtime), distinta do gate `1`.
-- [ ] **Em ambientes com pouca memória**, observe as mensagens de probe (OOM/timeout) e ajuste memória ou `--scanners` (ver [11-troubleshooting.md](11-troubleshooting.md)).
+- [ ] **Em ambientes com pouca memória**, observe as mensagens de probe (OOM/timeout) e ajuste memória ou `--scanners` (ver [14-observabilidade.md](14-observabilidade.md)).
 
 Exemplo (GitHub Actions, conceitual):
 
@@ -300,9 +300,9 @@ Exemplo (GitHub Actions, conceitual):
 
 ## 6. Referências cruzadas
 
-- [05-cli.md](05-cli.md) — flags, gating e exit codes.
-- [09-relatorios-sarif.md](09-relatorios-sarif.md) — estrutura do SARIF, `partialFingerprints`, scanners no `properties`.
-- [11-troubleshooting.md](11-troubleshooting.md) — diagnóstico de status `unavailable`/`timeout`/OOM.
+- [06-interfaces-cli-e-formatos.md](06-interfaces-cli-e-formatos.md) — flags, gating e exit codes.
+- [06-interfaces-cli-e-formatos.md](06-interfaces-cli-e-formatos.md) — estrutura do SARIF, `partialFingerprints`, scanners no `properties`.
+- [14-observabilidade.md](14-observabilidade.md) — diagnóstico de status `unavailable`/`timeout`/OOM.
 - `DESIGN.md` §14 (status de scanner) e §6 (matriz de correlação).
 - Código: `cmd/quorum/scan.go` (`logf`, `printSummary`, exit codes), `internal/orchestrator/orchestrator.go` (`ScannerRun`, probe, status), `internal/report/sarif.go` (`scannerSummary`, fingerprints).
 
