@@ -140,19 +140,23 @@ documento aparecem na seção "## Premissas" do respectivo arquivo.
 Itens não verificados na origem, divergências e dívidas conhecidas. Estes são candidatos naturais a
 backlog ([17-backlog](17-backlog.md)) e melhorias ([20-melhorias](20-melhorias.md)).
 
+> ✅ **G-02, G-09, G-10 e G-11 foram resolvidos na v0.2.4** (issues
+> [#15](https://github.com/Martinez1991/quorum-sec-scan/issues/15)–[#18](https://github.com/Martinez1991/quorum-sec-scan/issues/18),
+> milestone *hardening v0.2.4*). As linhas abaixo ficam para rastreabilidade histórica.
+
 | ID | Lacuna | Impacto | Documentos-fonte |
 |----|--------|---------|------------------|
 | G-01 | **Versão divergente**: `report.Version` hardcoded `0.1.0` vs produto v0.2.3; intenção (contrato estável vs defasagem) não clara no código. | Médio | 05 |
-| G-02 | **`durationMs` em `scanners[]`** serializa como **nanosegundos** (sem `MarshalJSON` custom), enquanto `summary.durationMs` usa `.Milliseconds()`; nome diverge da unidade. | Médio | 06 |
+| G-02 | ✅ **Resolvido na v0.2.4 ([#18](https://github.com/Martinez1991/quorum-sec-scan/issues/18)).** ~~`durationMs` em `scanners[]` serializava como nanosegundos~~ — agora `ScannerRun.MarshalJSON` emite milissegundos, coerente com `summary.durationMs`. | Médio | 06 |
 | G-03 | **`polaris`** referenciado em consenso sem adapter correspondente em `internal/adapter`. | Baixo | 02, 05, 09, 16 |
 | G-04 | **Cache de aliases sem TTL, sem versão de esquema e sem locking entre processos**; execuções concorrentes podem perder entradas (sem corrupção); mudança incompatível tolerada como cache vazio sem aviso. | Médio | 07, 02 |
 | G-05 | **Crosswalk YAML sem campo de versão**; esquema implícito no struct `Control`, sem migração automática. | Baixo | 07 |
 | G-06 | **Grype DB congelado** no build da `:full`; pode perder CVEs recentes sem rebuild/repull. | Alto | 07, 18 |
 | G-07 | **Pin incompleto de supply chain**: nem todos os scanners no `Dockerfile.full` estão pinados por `@sha256` (alguns por versão+checksum; Grype/Syft/Kubescape/Checkov via `curl\|sh`/`pip`); sem SBOM da imagem `:full`. | Alto | 03, 12, 18 |
 | G-08 | **Sem logging estruturado JSON nem métricas/telemetria exportáveis**; observabilidade é texto em stderr. | Médio | 03, 14 |
-| G-09 | **`--output` sem `Abs`/`Clean`** (perm 0644): risco de path traversal/overwrite (R3). | Alto | 12 |
-| G-10 | **`id` da OSV concatenado na URL sem `url.PathEscape`** nem validação de formato (R6). | Médio | 12 |
-| G-11 | **Ref do alvo concatenado nos args sem separador `--`** nem rejeição de refs iniciando com `-` (R1 argument injection residual). | Médio | 12 |
+| G-09 | ✅ **Resolvido na v0.2.4 ([#15](https://github.com/Martinez1991/quorum-sec-scan/issues/15)).** ~~`--output` sem `Clean` (perm 0644)~~ — agora `filepath.Clean` + escrita com perm `0o600` (R3). | Alto | 12 |
+| G-10 | ✅ **Resolvido na v0.2.4 ([#16](https://github.com/Martinez1991/quorum-sec-scan/issues/16)).** ~~`id` da OSV sem `url.PathEscape`/validação~~ — agora validado (`^[A-Za-z][A-Za-z0-9._-]{0,127}$`) + `url.PathEscape` (R6). | Médio | 12 |
+| G-11 | ✅ **Resolvido na v0.2.4 ([#17](https://github.com/Martinez1991/quorum-sec-scan/issues/17)).** ~~ref do alvo sem rejeição de `-`~~ — agora o boundary da CLI recusa target iniciando com `-` (R1 argument injection). | Médio | 12 |
 | G-12 | **Sem cap de bytes no stdout do scanner** e sem limite de tamanho de alvo (R2/R5 DoS). | Médio | 12 |
 | G-13 | **`aliases.json` sem integridade/assinatura** (perm 0644): risco de cache poisoning (R7). | Médio | 12 |
 | G-14 | **Sem redaction de valores de segredo** no relatório (R8). | Médio | 12 |

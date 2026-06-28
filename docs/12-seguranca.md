@@ -96,12 +96,12 @@ Crítico ≥ 8, Alto 6–7.9, Médio 4–5.9, Baixo < 4.
 
 | ID | Risco | Damage | Reprod. | Exploit. | Affected | Discover. | **Score** | **Sev** | Estado |
 |----|-------|:------:|:-------:|:--------:|:--------:|:---------:|:---------:|:-------:|--------|
-| R1 | Injeção de comando via `target`/flags | 9 | 3 | 3 | 6 | 4 | **5.0** | Médio | Mitigado (sem shell) |
+| R1 | Injeção de comando via `target`/flags | 9 | 3 | 3 | 6 | 4 | **5.0** | Médio | ✅ Mitigado (sem shell + recusa target `-`, v0.2.4) |
 | R2 | Parse de saída maliciosa do scanner | 6 | 7 | 5 | 7 | 5 | **6.0** | Alto | Parcial |
-| R3 | Path traversal / overwrite via `--output` | 7 | 8 | 7 | 5 | 6 | **6.6** | Alto | Gap |
+| R3 | Path traversal / overwrite via `--output` | 7 | 8 | 7 | 5 | 6 | **6.6** | Alto | ✅ Mitigado (`Clean` + `0o600`, v0.2.4) |
 | R4 | Supply chain (binários `curl\|sh`, tag mutável) | 9 | 5 | 5 | 8 | 4 | **6.2** | Alto | Parcial |
 | R5 | DoS por alvo gigante / zip bomb / img bomb | 6 | 6 | 5 | 6 | 6 | **5.8** | Médio | Parcial |
-| R6 | SSRF / exfiltração de IDs via OSV | 5 | 4 | 3 | 5 | 5 | **4.4** | Médio | Parcial |
+| R6 | SSRF / exfiltração de IDs via OSV | 5 | 4 | 3 | 5 | 5 | **4.4** | Médio | ✅ Mitigado (validação + `PathEscape` do id, v0.2.4) |
 | R7 | Cache poisoning (`aliases.json`) | 5 | 6 | 5 | 5 | 4 | **5.0** | Médio | Gap |
 | R8 | Exposição de findings (relatório sensível) | 6 | 5 | 4 | 6 | 5 | **5.2** | Médio | Parcial |
 | R9 | Crosswalk/baseline adulterado (false merge/suppress) | 7 | 5 | 4 | 5 | 4 | **5.0** | Médio | Parcial |
@@ -130,13 +130,15 @@ Crítico ≥ 8, Alto 6–7.9, Médio 4–5.9, Baixo < 4.
 - **Severidade.** Médio (alto impacto, baixa probabilidade no estado atual).
 - **Mitigação (presente).** `exec.CommandContext` com argv; nenhum `sh -c` no código; o tipo
   de alvo é resolvido por `resolveTargetType` e o ref é sempre posicional.
-- **Resíduo / atenção.** Um alvo que comece com `-` (ex.: `--config=/etc/...`) pode ser
-  interpretado como **flag** pelo scanner subjacente (*argument injection*), não como path.
-  Hoje o ref é concatenado direto nos args (ex.: trivy `args = []string{"image", ..., target.Ref}`).
+- **Resíduo / atenção.** ✅ **Resolvido na v0.2.4** ([#17](https://github.com/Martinez1991/quorum-sec-scan/issues/17)).
+  Um alvo iniciando com `-` (ex.: `--config=/etc/...`) poderia ser interpretado como **flag**
+  pelo scanner (*argument injection*). A v0.2.4 valida `target` no boundary da CLI
+  (`validateTargetRef` em `cmd/quorum/scan.go`) e **recusa qualquer ref iniciando com `-`**, de
+  modo que nenhum adapter recebe um ref com hífen-líder. Optou-se por essa validação universal
+  em vez de inserir `--` por scanner (que quebraria scanners sem suporte a `--`).
 - **Recomendação.**
-  - [ ] Inserir o separador `--` antes do alvo em cada adapter, quando o scanner suportar.
-  - [ ] Validar/normalizar `target.Ref` (rejeitar refs que comecem com `-`; validar formato
-        de referência de imagem e existência de path para repo).
+  - [x] ~~Validar/normalizar `target.Ref` (rejeitar refs que comecem com `-`)~~ — feito (v0.2.4).
+  - [ ] (Opcional) Validar formato de referência de imagem e existência de path para repo.
   - [ ] Teste de regressão garantindo que nenhum adapter use `sh -c`.
 - **Ferramentas.** `gosec` (G204), `semgrep` regra `go.lang.security.audit.dangerous-exec`,
   `golangci-lint`.
@@ -166,22 +168,21 @@ Crítico ≥ 8, Alto 6–7.9, Médio 4–5.9, Baixo < 4.
 
 ### R3 — Path traversal / overwrite via `--output` (B3)
 
-- **Descrição.** Em `cmd/quorum/scan.go:emit`, o caminho de `--output` é usado diretamente:
-  `os.MkdirAll(filepath.Dir(output), 0o755)` e `os.WriteFile(output, ..., 0o644)`. Não há
-  validação de que o destino esteja dentro de um diretório esperado, nem proteção contra
-  `..` ou caminhos absolutos.
+- ✅ **Mitigado na v0.2.4** ([#15](https://github.com/Martinez1991/quorum-sec-scan/issues/15)).
+- **Descrição.** Até a v0.2.3, em `cmd/quorum/scan.go:emit`, o caminho de `--output` era usado
+  diretamente (`os.WriteFile(output, ..., 0o644)`) sem normalização, e legível por outros
+  usuários do host.
 - **Impacto.** Em CI, um `--output` controlado por entrada (ex.: derivado de nome de
-  branch/PR) pode sobrescrever arquivos arbitrários graváveis pelo runner; criação de
-  diretórios fora do workspace.
+  branch/PR) podia sobrescrever arquivos graváveis pelo runner e expor findings (perm `0644`).
 - **Probabilidade.** Média (em pipelines que montam `--output` a partir de variáveis).
 - **Severidade.** Alto.
-- **Mitigação (presente).** Nenhuma específica além das permissões do FS do runner.
+- **Mitigação (presente, v0.2.4).** `emit` aplica `filepath.Clean(output)` e grava o relatório
+  com perm **`0o600`** (não mais world-readable). Coberto por teste (`TestEmitCleansOutputPath`).
 - **Recomendação.**
-  - [ ] Resolver `--output` com `filepath.Abs` + `filepath.Clean` e recusar saída fora de um
-        diretório base (`--output-dir`) ou do CWD.
-  - [ ] Recusar caminhos contendo `..` após `Clean`; documentar que `--output` não deve vir
-        de entrada não confiável.
-  - [ ] Considerar `O_EXCL`/escrita atômica quando não for sobrescrita intencional.
+  - [x] ~~Normalizar `--output` com `filepath.Clean`~~ — feito (v0.2.4).
+  - [x] ~~Reduzir a permissão do relatório~~ — feito: `0o600` (v0.2.4).
+  - [ ] (Opcional) Confinar a saída a um `--output-dir`/CWD quando vier de entrada não confiável.
+  - [ ] (Opcional) `O_EXCL`/escrita atômica quando não for sobrescrita intencional.
 - **Ferramentas.** `gosec` (G304 file path provided as taint), `semgrep`.
 
 ### R4 — Supply chain dos scanners e imagem (B5)
@@ -241,10 +242,11 @@ Crítico ≥ 8, Alto 6–7.9, Médio 4–5.9, Baixo < 4.
 
 ### R6 — SSRF / exfiltração via OSV (B4)
 
+- ✅ **Risco de manipulação de URL mitigado na v0.2.4** ([#16](https://github.com/Martinez1991/quorum-sec-scan/issues/16)); a exfiltração passiva de metadados ao provedor permanece (use `--offline`).
 - **Descrição.** O resolver de aliases consulta `https://api.osv.dev/v1/vulns/<id>`
-  (`internal/alias/osv.go`). O `<id>` vem da saída do scanner e é **concatenado na path da
-  URL sem sanitização**. A `BaseURL` é fixa (não controlável por flag), o que limita SSRF
-  clássico, mas um `id` adversário poderia conter caracteres de path/query.
+  (`internal/alias/osv.go`). O `<id>` vem da saída do scanner. Até a v0.2.3 era **concatenado
+  na path da URL sem sanitização**. A `BaseURL` é fixa (não controlável por flag), o que limita
+  SSRF clássico, mas um `id` adversário poderia conter caracteres de path/query.
 - **Impacto.** (a) Exfiltração passiva: a lista de IDs consultados revela quais
   vulnerabilidades existem no alvo a um terceiro (OSV.dev). (b) Risco residual de
   manipulação de URL se `id` não for validado.
@@ -254,10 +256,13 @@ Crítico ≥ 8, Alto 6–7.9, Médio 4–5.9, Baixo < 4.
   locais do scanner + cache); `BaseURL` fixa; cliente com **timeout de 8s** e backoff
   limitado (degradação graciosa — falha de rede nunca quebra o scan, *DESIGN §7*); CVE é
   preferido localmente antes de tocar a rede (`preferCVE`/`isCVE`), reduzindo nº de queries.
-- **Gaps.** `id` não validado/encodado antes de virar path; sem allowlist de host explícita
-  além da constante; consulta vaza metadados ao provedor.
+- **Mitigação (presente, v0.2.4).** O `id` é validado contra
+  `^[A-Za-z][A-Za-z0-9._-]{0,127}$` e passa por `url.PathEscape` antes de compor a URL; ids
+  malformados são recusados **sem tocar a rede** (teste `TestOSVRejectsMalformedID`).
+- **Gaps remanescentes.** Sem allowlist de host explícita além da constante; a consulta ainda
+  vaza metadados (lista de IDs) ao provedor.
 - **Recomendação.**
-  - [ ] `url.PathEscape(id)` e validar formato (`CVE-…`, `GHSA-…`) antes da requisição.
+  - [x] ~~`url.PathEscape(id)` + validar formato antes da requisição~~ — feito (v0.2.4).
   - [ ] Documentar `--offline` para ambientes air-gapped / dados sensíveis.
   - [ ] Permitir mirror interno de OSV via env, com allowlist de host.
 - **Ferramentas.** `gosec` (G107 url taint), proxy egress allowlist, `semgrep`.
@@ -287,7 +292,7 @@ Crítico ≥ 8, Alto 6–7.9, Médio 4–5.9, Baixo < 4.
 - **Descrição.** O relatório (SARIF/JSON/XML) contém vulnerabilidades, misconfigs e
   **secrets detectados** (trivy/dockle emitem findings de segredo). Esse output é dado
   sensível: revela a superfície de ataque do alvo e pode conter trechos próximos a segredos.
-  `emit` escreve com perm `0644`.
+  Desde a v0.2.4, `emit` escreve com perm **`0o600`** (antes `0644`).
 - **Impacto.** Divulgação de postura de segurança / pistas de exploração a quem ler o
   artefato.
 - **Probabilidade.** Média (artefatos de CI frequentemente são públicos ou amplamente
@@ -295,8 +300,8 @@ Crítico ≥ 8, Alto 6–7.9, Médio 4–5.9, Baixo < 4.
 - **Severidade.** Médio.
 - **Mitigação (presente).** Saída default é stdout (não persiste por padrão); `--min-severity`
   e `--quiet` reduzem ruído; baseline `.quorumignore` permite suprimir findings conhecidos.
-- **Gaps.** Perm `0644` no arquivo; sem redaction de valores de segredo no relatório; nenhum
-  aviso de classificação do artefato.
+- **Gaps remanescentes.** ~~Perm `0644`~~ (corrigido para `0o600` na v0.2.4); ainda **sem
+  redaction de valores de segredo** no relatório (G-14) e sem aviso de classificação do artefato.
 - **Recomendação.**
   - [ ] Tratar relatórios SARIF como artefatos restritos (não públicos por padrão em CI).
   - [ ] Redigir/mascarar valores de segredo; perm `0600` para `--output`.
@@ -345,14 +350,14 @@ Crítico ≥ 8, Alto 6–7.9, Médio 4–5.9, Baixo < 4.
 |-----------|--------------------------|----------|--------|
 | A01 Broken Access Control | Parcial — sem authz própria; acesso = FS/CI runner | R3, R7, R8 | Depende do ambiente |
 | A02 Cryptographic Failures | OSV via HTTPS; sem dados em repouso cifrados | R6, R8 | OK (TLS) / gap em repouso |
-| A03 Injection | **Central** — command/argument injection | R1 | Mitigado (argv, sem shell); resíduo argument-injection |
+| A03 Injection | **Central** — command/argument injection | R1 | ✅ Mitigado (argv, sem shell; v0.2.4 recusa target `-`) |
 | A04 Insecure Design | *false split > false merge*, status transparente | R2, R9 | Forte por design |
-| A05 Security Misconfiguration | Perms `0644`, fallback de crosswalk, Docker run | R3, R7, R8 | Parcial |
+| A05 Security Misconfiguration | Perms `0o600` no relatório (v0.2.4), fallback de crosswalk, Docker run | R3, R7, R8 | Parcial (melhorou na v0.2.4) |
 | A06 Vulnerable & Outdated Components | Scanners/imagem base bundled | R4, R10 | Parcial (pin parcial) |
 | A07 Identification & Auth Failures | **N/A** — sem contas/auth | — | N/A |
 | A08 Software & Data Integrity Failures | cosign + SLSA; cache/baseline não assinados | R4, R7, R9 | Parcial |
 | A09 Logging & Monitoring Failures | Logs de status/supressão em stderr | R9 | OK (escopo CLI) |
-| A10 SSRF | OSV.dev (BaseURL fixa, id não encodado) | R6 | Parcial |
+| A10 SSRF | OSV.dev (BaseURL fixa; id validado + `PathEscape` na v0.2.4) | R6 | ✅ Mitigado (resta vazamento de metadados) |
 
 ---
 
@@ -369,7 +374,7 @@ OSV.dev. O Top 10 de API se aplica por analogia ao consumo dessa API:
 | API4 Unrestricted Resource Consumption | Parcial | Timeout 8s + backoff no cliente OSV |
 | API5 BFLA | N/A | Sem funções/níveis |
 | API6 Unrestricted Business Flows | N/A | — |
-| API7 SSRF | Parcial | BaseURL fixa; `id` não encodado (R6) |
+| API7 SSRF | ✅ Mitigado | BaseURL fixa; `id` validado + `PathEscape` na v0.2.4 (R6); resta vazamento de metadados |
 | API8 Security Misconfiguration | Parcial | `--offline` para air-gap |
 | API9 Improper Inventory | N/A | Um único endpoint conhecido |
 | API10 Unsafe Consumption of APIs | **Aplicável** | Consumir OSV: validar/encodar `id`, tratar resposta como não confiável (R6) |
@@ -385,9 +390,9 @@ Nível alvo recomendado: **ASVS L1 (com L2 onde aplicável a ferramenta de linha
 
 | Capítulo ASVS | Requisito relevante | Estado no Quorum |
 |---------------|---------------------|------------------|
-| V1 Encoding/Sanitization | Tratar saída de scanner e resposta OSV como não confiável | Parcial (R2/R6 — falta encode/sanitização) |
-| V2 Validation | Validar `target`, `--output`, `id` OSV | Parcial (R1/R3/R6) |
-| V5 File Handling | Path traversal em `--output`/cache | Gap (R3); perms `0644` (R7/R8) |
+| V1 Encoding/Sanitization | Tratar saída de scanner e resposta OSV como não confiável | Parcial (R2 pendente; R6 `id` encodado na v0.2.4) |
+| V2 Validation | Validar `target`, `--output`, `id` OSV | ✅ Coberto na v0.2.4 (R1/R3/R6); resta validação semântica de imagem/path |
+| V5 File Handling | Path traversal em `--output`/cache | `--output` mitigado na v0.2.4 (R3, `Clean`+`0o600`); cache `aliases.json` ainda `0644` (R7) |
 | V8 Data Protection | Findings/secrets em repouso | Parcial (R8) |
 | V10 Communication | TLS para OSV | OK |
 | V12 Secure Comms / Egress | `--offline`, allowlist de host | Parcial (R6) |
