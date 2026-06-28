@@ -705,11 +705,13 @@ flowchart LR
    `MergedFinding`/`Finding` (tags `json`), com `additionalProperties: false` por escolha
    editorial de rigor; o produto **não publica** esse schema como arquivo no repo nesta versão
    — é um artefato documental derivado do código.
-4. **`durationMs` no JSON:** o campo da struct `ScannerRun.Duration` tem tag `json:"durationMs"`
-   mas é do tipo `time.Duration` (nanosegundos como inteiro na serialização padrão do Go).
-   Assumimos a serialização padrão; o nome do campo sugere milissegundos, mas a unidade real
-   do valor é nanosegundos para `scanners[].durationMs` (já `summary.durationMs` é convertido
-   via `.Milliseconds()`). Ver "Gaps".
+4. **`durationMs` no JSON:** ✅ **corrigido na v0.2.4** ([#18](https://github.com/Martinez1991/quorum-sec-scan/issues/18)).
+   Até a v0.2.3, `scanners[].durationMs` serializava em **nanosegundos** (a struct
+   `ScannerRun.Duration` é `time.Duration` e usava a serialização padrão do Go), divergindo de
+   `summary.durationMs` (que já convertia via `.Milliseconds()`). A partir da v0.2.4,
+   `ScannerRun.MarshalJSON` emite `durationMs` em **milissegundos** nos dois lugares.
+   ⚠️ Mudança de contrato: consumidores que liam o valor antigo (ns) de `scanners[].durationMs`
+   devem se ajustar.
 5. **Variáveis de ambiente:** assumimos que a CLI não faz binding env→flag próprio; o único
    uso de env é indireto (`os.UserCacheDir`) e dentro do shell da Action.
 6. **Cross-links:** os arquivos `04-adapters.md`, `05-alias-e-osv.md`, `07-orchestrator-e-status.md`
