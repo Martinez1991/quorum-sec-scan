@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.svg" width="120" alt="Quorum logo">
+</p>
+
 # Quorum
 
 **English** · [Português](README.pt-BR.md)

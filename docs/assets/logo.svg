@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Quorum">
+  <title>Quorum</title>
+  <desc>A shield with a checkmark joining three nodes — a quorum of scanners reaching consensus.</desc>
+  <defs>
+    <linearGradient id="q-shield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+  </defs>
+  <!-- Shield (mirrors the action.yml branding icon) -->
+  <path d="M64 12 L107 27 V63 C107 90 89 108 64 117 C39 108 21 90 21 63 V27 Z"
+        fill="url(#q-shield)" stroke="#5b21b6" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Consensus: three nodes joined by a checkmark -->
+  <path d="M45 64 L58 78 L86 45" fill="none" stroke="#ffffff" stroke-width="9"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="45" cy="64" r="6.5" fill="#ffffff"/>
+  <circle cx="58" cy="78" r="6.5" fill="#ffffff"/>
+  <circle cx="86" cy="45" r="6.5" fill="#ffffff"/>
+</svg>

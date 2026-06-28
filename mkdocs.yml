@@ -10,6 +10,8 @@ docs_dir: docs
 theme:
   name: material
   language: pt-BR
+  logo: assets/logo-white.svg
+  favicon: assets/logo.svg
   icon:
     repo: fontawesome/brands/github
   features:

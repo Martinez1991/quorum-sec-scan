@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Quorum">
+  <title>Quorum</title>
+  <!-- Monochrome variant for the dark/purple site header. -->
+  <path d="M64 12 L107 27 V63 C107 90 89 108 64 117 C39 108 21 90 21 63 V27 Z"
+        fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M45 64 L58 78 L86 45" fill="none" stroke="#6d28d9" stroke-width="9"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="45" cy="64" r="6.5" fill="#6d28d9"/>
+  <circle cx="58" cy="78" r="6.5" fill="#6d28d9"/>
+  <circle cx="86" cy="45" r="6.5" fill="#6d28d9"/>
+</svg>
