@@ -2,7 +2,7 @@
 
 Este documento descreve a arquitetura do **Quorum** (v0.2.3), uma ferramenta CLI/Docker de *consensus security scanning*. O Quorum não é um scanner: ele orquestra um pool de scanners OSS (trivy, grype, checkov, kics, dockle, kubescape), normaliza toda a saída para um modelo canônico (`model.Finding`), resolve aliases de vulnerabilidade, correlaciona findings equivalentes por uma chave determinística, calcula um score de confiança (consenso) e emite um relatório unificado (SARIF/JSON/XML). O estilo arquitetural escolhido é um **Modular Monolith** (binário Go único) organizado segundo **Ports & Adapters** (hexagonal) e estruturado como um **Pipeline** determinístico. Este documento justifica essas escolhas, mapeia as camadas para os pacotes reais do repositório e descreve o fluxo de execução com diagramas de componentes e de sequência.
 
-> Documentos relacionados: [Visão geral](01-visao-geral.md) · [Modelo de dados / Design](DESIGN.md) · [CLI e flags](05-cli.md) · [Supply chain e distribuição](12-supply-chain.md). Quando um link apontar para um arquivo ainda não escrito, trate-o como referência futura.
+> Documentos relacionados: [Visão geral](01-visao-geral.md) · [Modelo de dados / Design](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) · [CLI e flags](06-interfaces-cli-e-formatos.md) · [Supply chain e distribuição](10-infraestrutura.md). Quando um link apontar para um arquivo ainda não escrito, trate-o como referência futura.
 
 ---
 
@@ -269,7 +269,7 @@ Pontos fiéis ao código que o diagrama reflete:
 - **Determinismo/Idempotência:** chaves e fingerprints são funções puras; consenso ordena de forma estável; mesma entrada ⇒ mesmo SARIF.
 - **Resiliência:** degradação graciosa em falha de rede (alias/OSV); status explícito por scanner; timeout isolado por scanner não derruba os demais.
 - **Observabilidade:** logs de progresso em stderr (silenciáveis com `--quiet`), sumário por scanner com status, supressões sempre logadas.
-- **Segurança da cadeia:** artefato único assinado keyless (cosign/OIDC) + atestação SLSA build-provenance; imagens `:full`/`:slim` no GHCR; ver [12-supply-chain.md](12-supply-chain.md).
+- **Segurança da cadeia:** artefato único assinado keyless (cosign/OIDC) + atestação SLSA build-provenance; imagens `:full`/`:slim` no GHCR; ver [10-infraestrutura.md](10-infraestrutura.md).
 - **Testabilidade:** contract tests por adapter; injeção de dependências no controller permite stub de OSV/cache nos testes.
 
 ---
@@ -309,6 +309,6 @@ Estas propostas são roadmap, não comportamento atual da v0.2.3.
 
 1. Tomei o código da branch `main` (v0.2.3) como fonte de verdade. Onde DESIGN.md (marcado "Draft v0.1") diverge do código, segui o código — por exemplo, a assinatura real de `alias.Resolver.Canonical(ctx, id, knownAliases)` e o `defaultProbeTime = 60s` em `orchestrator.go`.
 2. Assumi que `internal/adapter/testdata` contém as fixtures de contrato citadas no DESIGN §5/§14; não inspecionei cada fixture individualmente, mas a presença dos testes (`adapter_test.go`, `realdata_test.go`) confirma o padrão.
-3. Os detalhes de distribuição/supply chain (imagens `:full`/`:slim`, cosign, SLSA, GitHub Action composite) vêm do briefing do produto e do DESIGN §12; este documento os referencia mas não os auditou em `release.yml`/`action.yml` — ver [12-supply-chain.md](12-supply-chain.md) para a fonte autoritativa.
-4. Os links relativos para outros documentos de `docs/` (`01-visao-geral.md`, `05-cli.md`, `12-supply-chain.md`) assumem a numeração padrão do conjunto de docs; no momento da escrita, este (`04-arquitetura.md`) é o arquivo presente em `docs/`.
+3. Os detalhes de distribuição/supply chain (imagens `:full`/`:slim`, cosign, SLSA, GitHub Action composite) vêm do briefing do produto e do DESIGN §12; este documento os referencia mas não os auditou em `release.yml`/`action.yml` — ver [10-infraestrutura.md](10-infraestrutura.md) para a fonte autoritativa.
+4. Os links relativos para outros documentos de `docs/` (`01-visao-geral.md`, `06-interfaces-cli-e-formatos.md`, `10-infraestrutura.md`) assumem a numeração padrão do conjunto de docs; no momento da escrita, este (`04-arquitetura.md`) é o arquivo presente em `docs/`.
 5. O diagrama de sequência representa o caminho feliz com `Correlator` não-nulo e `--offline` desligado; variações (offline, correlator nil, scanner indisponível) estão descritas em texto.

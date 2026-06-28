@@ -2,7 +2,7 @@
 
 O Quorum **não possui frontend gráfico** (web, desktop ou mobile). Ele é, por
 design, uma ferramenta **CLI/Docker** orientada a CI/CD: "configure via flags,
-gate via exit code. No panel, no daemon" ([`cmd/quorum/root.go`](../cmd/quorum/root.go)).
+gate via exit code. No panel, no daemon" ([`cmd/quorum/root.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/root.go)).
 A "interface de usuário" do Quorum é, portanto, a **experiência de terminal**:
 logs de progresso em `stderr` com prefixo `[quorum]`, uma tabela de _summary_
 ao final, _exit codes_ determinísticos para gating, e o artefato SARIF — que,
@@ -19,7 +19,7 @@ claramente eventuais propostas futuras.
 | ------------------------------------------- | :----: | -------------------------------------------------------------------------------------------------------------------------------- |
 | SPA / aplicação web (React, Vue, etc.)      |  N/A   | Não há código de UI no repositório. O binário é um CLI Cobra (`cmd/quorum`). `main()` apenas executa o comando raiz e sai.        |
 | Servidor HTTP / API REST que sirva uma UI   |  N/A   | Não há servidor; não há `net/http` handlers de aplicação. O Quorum é _stateless_ e _one-shot_: roda, emite relatório, encerra.    |
-| Painel/dashboard, daemon, _long-running_    |  N/A   | Princípio explícito: "No panel, no daemon" ([`root.go`](../cmd/quorum/root.go)). Cada invocação é um processo efêmero.            |
+| Painel/dashboard, daemon, _long-running_    |  N/A   | Princípio explícito: "No panel, no daemon" ([`root.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/root.go)). Cada invocação é um processo efêmero.            |
 | Autenticação / contas / sessões de usuário  |  N/A   | Não há multiusuário nem persistência de sessão. A única persistência é o cache local de aliases (`~/.cache/quorum/aliases.json`). |
 | Componentes visuais, CSS, design system web |  N/A   | A renderização é texto puro em `stderr`/`stdout`. Sem ANSI/cores no código Go.                                                    |
 | Responsividade / breakpoints / mobile       |  N/A   | Conceito de viewport não se aplica a um TUI não-interativo. Ver [§8 Responsividade](#8-responsividade--na).                       |
@@ -69,7 +69,7 @@ flowchart LR
 ## 3. Logs de progresso (`[quorum] …`)
 
 Os logs de progresso são emitidos pela closure `logf` em
-[`runScan`](../cmd/quorum/scan.go), que prefixa toda linha com `[quorum] ` e
+[`runScan`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go), que prefixa toda linha com `[quorum] ` e
 escreve em `stderr` — **a menos que `--quiet` esteja ativo**:
 
 ```go
@@ -129,7 +129,7 @@ sequenceDiagram
 
 ## 4. Tabela de _summary_
 
-Ao final de cada scan, [`printSummary`](../cmd/quorum/scan.go) escreve em
+Ao final de cada scan, [`printSummary`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go) escreve em
 `stderr` um bloco legível para humanos. Ele é **suprimido por `--quiet`**
 (retorna imediatamente quando `quiet == true`). Layout real produzido pelo
 código:
@@ -171,7 +171,7 @@ código:
 ## 5. Estados de scanner (status)
 
 Cada scanner termina em exatamente um de cinco estados, definidos em
-[`orchestrator.ScannerRun.Status`](../internal/orchestrator/orchestrator.go).
+[`orchestrator.ScannerRun.Status`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/orchestrator/orchestrator.go).
 Eles são a peça central da transparência da UX — "0 vulns" nunca pode parecer
 "o scan não rodou" (DESIGN §14).
 
@@ -316,7 +316,7 @@ Checklist de acessibilidade (validação contínua):
 
 ## 10. Mensagens de erro e validação
 
-A validação acontece cedo, em [`runScan`](../cmd/quorum/scan.go), e erros
+A validação acontece cedo, em [`runScan`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum/scan.go), e erros
 retornam pela cadeia `RunE` → `main()`, que imprime `quorum: <err>` em `stderr`
 e sai com **exit 2**. Como o comando raiz usa `SilenceUsage`/`SilenceErrors`,
 não há _dump_ de help a cada erro — só a mensagem objetiva.
@@ -343,7 +343,7 @@ não há _dump_ de help a cada erro — só a mensagem objetiva.
 
 A representação visual mais rica do Quorum **não** é dele — é a **UI de Code
 Scanning do GitHub**, alimentada pelo SARIF que o Quorum emite como formato
-**primário** ([`internal/report/sarif.go`](../internal/report/sarif.go)).
+**primário** ([`internal/report/sarif.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/sarif.go)).
 
 ```mermaid
 flowchart LR
@@ -379,7 +379,7 @@ Checklist de integração com Code Scanning:
 - [ ] Opcional: combinar com `--fail-on` para bloquear o PR via exit code, independentemente da UI.
 
 JSON e XML existem como formatos alternativos de máquina (ver
-[`json.go`](../internal/report/json.go) e `xml.go`), úteis para
+[`json.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report/json.go) e `xml.go`), úteis para
 ferramentas próprias — mas nenhum deles é uma "tela".
 
 ---

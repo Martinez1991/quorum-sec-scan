@@ -4,7 +4,7 @@ Este documento descreve **tudo o que o Quorum (`quorum-sec-scan`, v0.2.3) persis
 
 > Princípio de design relacionado: o cache e os artefatos auxiliares **nunca** podem ser fonte de falha de scan. Onde um artefato está ausente, ilegível ou corrompido, o Quorum degrada graciosamente para um comportamento seguro (ver `internal/cache/store.go`, `internal/crosswalk/crosswalk.go`, `internal/filter/filter.go`).
 
-Documentos relacionados: [Arquitetura](03-arquitetura.md) · [Modelo de Dados](04-modelo-de-dados.md) · [Supply Chain](12-supply-chain.md).
+Documentos relacionados: [Arquitetura](04-arquitetura.md) · [Modelo de Dados](05-modelo-de-dados.md) · [Supply Chain](10-infraestrutura.md).
 
 ---
 
@@ -164,7 +164,7 @@ Exemplo:
 VULN|CVE-2023-0001|pkg:npm/left-pad@1.0.0
 ```
 
-> Uma entrada por **CorrelationKey** suprime todos os findings que compartilham aquela chave; uma entrada por **Fingerprint** é mais específica. Ver [Modelo de Dados](04-modelo-de-dados.md) para a definição de ambos.
+> Uma entrada por **CorrelationKey** suprime todos os findings que compartilham aquela chave; uma entrada por **Fingerprint** é mais específica. Ver [Modelo de Dados](05-modelo-de-dados.md) para a definição de ambos.
 
 ### 4.3 Localização e ciclo de vida
 
@@ -212,7 +212,7 @@ YAML, uma **lista** de objetos `Control` (note: o arquivo inteiro é uma sequên
     kics:    ["38c5ee0d-7f22-4260-ab72-5073048df100"]
 ```
 
-Indexação interna: ao carregar, cada par `(scanner, ruleID)` vira a chave `"scanner|ruleid"` (lowercased, trimmed) apontando para uma `Resolution{Control, Category, CWE, Title}` (ver `key()` e `add()` em `crosswalk.go`). Exemplo real completo em [`crosswalk/aws.yaml`](../crosswalk/aws.yaml).
+Indexação interna: ao carregar, cada par `(scanner, ruleID)` vira a chave `"scanner|ruleid"` (lowercased, trimmed) apontando para uma `Resolution{Control, Category, CWE, Title}` (ver `key()` e `add()` em `crosswalk.go`). Exemplo real completo em [`crosswalk/aws.yaml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/crosswalk/aws.yaml).
 
 ### 5.3 Localização e resolução de diretório
 
@@ -351,7 +351,7 @@ Formato inválido → erro de uso (exit 2). Ver `report.ParseFormat`.
 - Caminhos por SO do cache derivam do contrato de `os.UserCacheDir()` da stdlib do Go; os exemplos por SO (Linux/macOS/Windows) seguem a documentação dessa função, não uma string hardcoded no código (o código só compõe `<UserCacheDir>/quorum/aliases.json`).
 - O formato interno do Grype DB é tratado como **opaco** pelo Quorum; afirmações sobre ele baseiam-se no contrato do Grype e nas variáveis `GRYPE_DB_CACHE_DIR`/`GRYPE_DB_AUTO_UPDATE` configuradas no `Dockerfile.full`, não em leitura do binário do DB.
 - "Relatório efêmero" assume o uso típico em CI; o Quorum não impõe retenção — qualquer persistência de relatórios é externa ao produto.
-- Os detalhes de SARIF (`partialFingerprints["quorum/v1"]`, `Fingerprint = sha256(correlationKey)`) baseiam-se na especificação do produto e no roteamento em `internal/report`; o conteúdo exato do `sarif.go` não foi citado linha a linha aqui (ver [Modelo de Dados](04-modelo-de-dados.md)).
+- Os detalhes de SARIF (`partialFingerprints["quorum/v1"]`, `Fingerprint = sha256(correlationKey)`) baseiam-se na especificação do produto e no roteamento em `internal/report`; o conteúdo exato do `sarif.go` não foi citado linha a linha aqui (ver [Modelo de Dados](05-modelo-de-dados.md)).
 
 ## Gaps conhecidos
 

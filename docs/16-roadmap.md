@@ -2,7 +2,7 @@
 
 Este documento descreve a evolução planejada do **Quorum** (`quorum-sec-scan`),
 a ferramenta de *consensus security scanning* CLI/Docker. Ele consolida a tabela
-de roadmap publicada no [README.md](../README.md#roadmap), explicita o estado
+de roadmap publicada no [README.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md#roadmap), explicita o estado
 atual (**v0.2.3**), e organiza o trabalho em fases (MVP / V1 / V2 / V3 / Longo
 prazo) com **objetivos**, **entregáveis** e **critérios de saída** verificáveis
 por fase. O documento é *as-is* sobre o que já existe e *forward-looking* (com
@@ -25,7 +25,7 @@ rótulo claro) sobre o que ainda não existe.
 A numeração de fases (MVP/V1/V2/V3) é a abstração de planejamento; ela mapeia
 para as versões SemVer reais conforme a tabela abaixo. O *trigger* de release é
 restrito a tags `v[0-9]+.[0-9]+.[0-9]+` em
-[`.github/workflows/release.yml`](../.github/workflows/release.yml).
+[`.github/workflows/release.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/release.yml).
 
 | Fase | Versão(ões) | Tema | Status |
 |------|-------------|------|--------|
@@ -101,15 +101,15 @@ gantt
 ### Entregáveis
 - Adapters `trivy` e `grype` implementando a interface `Adapter`
   (`Name`/`Version`/`Supports`/`Capabilities`/`Run`) — ver
-  [`internal/adapter/trivy.go`](../internal/adapter/trivy.go) e
-  [`grype.go`](../internal/adapter/grype.go).
+  [`internal/adapter/trivy.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/trivy.go) e
+  [`grype.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/grype.go).
 - `correlationKey` de VULN baseado em `vulnId + purl`; `Fingerprint =
   sha256(correlationKey)`.
 - Relatórios **SARIF** (primário) e **JSON**, com
   `partialFingerprints["quorum/v1"]` e `properties.detectedBy/detectionCount/confidence`.
 - Imagem Docker `:full` com os scanners empacotados.
 - Comandos `scan <target>` e `list-scanners` (cobra) em
-  [`cmd/quorum`](../cmd/quorum).
+  [`cmd/quorum`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/cmd/quorum).
 
 ### Critérios de saída
 - [x] Dois CVEs equivalentes (CVE x GHSA) para o mesmo pacote/versão fundem em um
@@ -117,7 +117,7 @@ gantt
 - [x] Saída SARIF válida ingerível pelo GitHub code scanning.
 - [x] Exit codes determinísticos: `0` ok, `1` gate, `2` erro.
 - [x] Contract test por adapter contra fixture real em
-      [`internal/adapter/testdata`](../internal/adapter/testdata).
+      [`internal/adapter/testdata`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/testdata).
 
 ---
 
@@ -131,10 +131,10 @@ v0.3 (K8s/Dockle/XML) está em curso — vários componentes já existem no cód
 engines divergem em IDs de regra e identidade de recurso.
 
 **Entregáveis:**
-- Adapters `checkov` e `kics` ([`internal/adapter/checkov.go`](../internal/adapter/checkov.go),
-  [`kics.go`](../internal/adapter/kics.go)).
+- Adapters `checkov` e `kics` ([`internal/adapter/checkov.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/checkov.go),
+  [`kics.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/kics.go)).
 - **Crosswalk** YAML `rule → canonical control` (AVD/CIS) em
-  [`internal/crosswalk`](../internal/crosswalk), bundled em `/opt/quorum/crosswalk`
+  [`internal/crosswalk`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/crosswalk), bundled em `/opt/quorum/crosswalk`
   (com fallback automático a partir de `--crosswalk ./crosswalk`).
 - `correlationKey` de MISCONFIG por `basename(file) + resourceType +
   canonicalControl`, com *fallback* por categoria; regra sem mapeamento fica
@@ -151,19 +151,19 @@ engines divergem em IDs de regra e identidade de recurso.
 XML para pipelines legados/JUnit-like.
 
 **Entregáveis (estado no código):**
-- Adapter `kubescape` (K8S_POSTURE) — [`internal/adapter/kubescape.go`](../internal/adapter/kubescape.go). ✅ presente
-- Adapter `dockle` (IMG_HARDENING, controles CIS-DI) — [`internal/adapter/dockle.go`](../internal/adapter/dockle.go). ✅ presente
-- Saída **XML** (mesma estrutura do JSON serializada) — [`internal/report`](../internal/report). ✅ presente
+- Adapter `kubescape` (K8S_POSTURE) — [`internal/adapter/kubescape.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/kubescape.go). ✅ presente
+- Adapter `dockle` (IMG_HARDENING, controles CIS-DI) — [`internal/adapter/dockle.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/dockle.go). ✅ presente
+- Saída **XML** (mesma estrutura do JSON serializada) — [`internal/report`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/report). ✅ presente
 - **Polaris** (K8s) está listado no roadmap original do README, mas **ainda NÃO
   tem adapter** — há apenas referência ao engine na família `k8s` em
-  [`internal/consensus/consensus.go`](../internal/consensus/consensus.go). Reclassificado
+  [`internal/consensus/consensus.go`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/consensus/consensus.go). Reclassificado
   para a **V3** (novos engines).
 
 **Entregáveis de cadeia (supply chain), já vigentes nesta linha:**
 - Assinatura **cosign keyless** (OIDC) de imagens e binários.
 - **Atestação SLSA build-provenance** (`actions/attest-build-provenance`)
   verificada no release.
-- **GitHub Action composite** ([`action.yml`](../action.yml)) que cosign-verifica
+- **GitHub Action composite** ([`action.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/action.yml)) que cosign-verifica
   a imagem `:full` antes de rodar; tag móvel `v0` para pin do action.
 
 **Critérios de saída:**
@@ -225,7 +225,7 @@ cobertura de controles e engines.
 
 ### Entregáveis propostos
 1. **Identidade per-resource em MISCONFIG.**
-   - Limitação atual (ver [README §Known limitations](../README.md#known-limitations)):
+   - Limitação atual (ver [README §Known limitations](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md#known-limitations)):
      dois recursos *distintos* do *mesmo tipo* com o *mesmo* controle no *mesmo*
      arquivo podem **over-merge**. Proposta: identidade de recurso normalizada
      (ex.: endereço Terraform `aws_s3_bucket.data`) para correlacionar com
@@ -297,16 +297,16 @@ Independentemente da fase, um item só é considerado entregue quando:
 
 - [ ] Código segue a interface `Adapter` (quando aplicável) e o modelo canônico.
 - [ ] Há **contract test** contra fixture real do output da ferramenta
-      ([`internal/adapter/testdata`](../internal/adapter/testdata)).
+      ([`internal/adapter/testdata`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/internal/adapter/testdata)).
 - [ ] `make test`, `make vet`, `make build` verdes; CI
-      ([`ci.yml`](../.github/workflows/ci.yml)) e e2e
-      ([`e2e.yml`](../.github/workflows/e2e.yml)) passam.
+      ([`ci.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/ci.yml)) e e2e
+      ([`e2e.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/e2e.yml)) passam.
 - [ ] Invariante **false split > false merge** preservado (sem fusões
       especulativas; `unmapped` quando não houver mapeamento).
 - [ ] Status por scanner e supressões de baseline permanecem explícitos
       ("0 findings is not proof of safety").
 - [ ] Documentação atualizada e, quando aplicável, exemplo de CI em
-      [`examples/ci/`](../examples/ci).
+      [`examples/ci/`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/examples/ci).
 - [ ] Release apenas por tag SemVer `v[0-9]+.[0-9]+.[0-9]+`, com imagens/binários
       assinados (cosign) e atestação SLSA verificada.
 
@@ -314,7 +314,7 @@ Independentemente da fase, um item só é considerado entregue quando:
 
 ## 9. Rastreabilidade README ↔ fases
 
-Mapeamento direto da tabela do [README §Roadmap](../README.md#roadmap) para as
+Mapeamento direto da tabela do [README §Roadmap](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md#roadmap) para as
 fases deste documento:
 
 | Linha do README | Fase aqui | Observação de fidelidade |

@@ -14,9 +14,9 @@ duração), vários RNF clássicos de produtos SaaS não se aplicam diretamente.
 for o caso, o requisito é declarado explicitamente como **N/A** com justificativa
 técnica, e — quando agregar valor — acompanhado de uma **Proposta futura**
 claramente separada. A natureza arquitetural do produto está descrita em
-[01-visao-geral.md](01-visao-geral.md) e [02-arquitetura.md](02-arquitetura.md)
+[01-visao-geral.md](01-visao-geral.md) e [04-arquitetura.md](04-arquitetura.md)
 (crie-os se ainda não existirem); o modelo de dados, a matriz de correlação e a
-matemática do consenso estão em [DESIGN.md](../DESIGN.md).
+matemática do consenso estão em [DESIGN.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md).
 
 > Convenção de criticidade dos RNF: **P0** = essencial (release bloqueia se
 > violado), **P1** = importante, **P2** = desejável.

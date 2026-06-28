@@ -61,4 +61,4 @@ como tal (com justificativa e, quando útil, "proposta futura" separada):
 
 Convenção: arquivos seguem `NN-arquivo.md` (`00` índice, `99` checklists); cross-links são relativos
 dentro de `docs/`. Documentação descritiva do produto na v0.2.3 — para o produto em si, veja o
-[README principal](../README.md).
+[README principal](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md).

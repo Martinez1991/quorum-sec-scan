@@ -11,7 +11,7 @@ priorizada por impacto × esforço, um roadmap sugerido e uma seção de premiss
 > Escopo: Quorum é uma ferramenta **CLI/Docker** de *consensus security scanning*. Itens que
 > tocariam em frontend web, banco relacional, API REST de runtime ou IA/LLM são marcados como
 > **N/A** com justificativa, e qualquer ideia nessa direção aparece como **Proposta futura**
-> claramente separada. Veja [DESIGN.md](../DESIGN.md) e o [README](../README.md).
+> claramente separada. Veja [DESIGN.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) e o [README](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md).
 
 ---
 
@@ -546,6 +546,6 @@ flowchart LR
 
 ### Ver também
 
-- [DESIGN.md](../DESIGN.md) — modelo de dados, matriz de correlação (§6), matemática do
+- [DESIGN.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) — modelo de dados, matriz de correlação (§6), matemática do
   consenso (§9), supply chain (§12), status de scanner (§14).
-- [README.md](../README.md) — uso, exit codes, baseline, distribuição assinada.
+- [README.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) — uso, exit codes, baseline, distribuição assinada.

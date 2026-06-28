@@ -4,11 +4,11 @@ Esta seção descreve, de forma fiel ao código, como o **Quorum** (`quorum-sec-
 
 Todos os fatos abaixo derivam diretamente de:
 
-- [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — job `build-test`.
-- [`.github/workflows/e2e.yml`](../.github/workflows/e2e.yml) — job `consensus`.
-- [`.github/workflows/release.yml`](../.github/workflows/release.yml) — jobs `images` e `binaries`.
-- [`.goreleaser.yaml`](../.goreleaser.yaml) — build de binários nativos.
-- [`action.yml`](../action.yml) — GitHub Action composite que envolve a imagem `:full`.
+- [`.github/workflows/ci.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/ci.yml) — job `build-test`.
+- [`.github/workflows/e2e.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/e2e.yml) — job `consensus`.
+- [`.github/workflows/release.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.github/workflows/release.yml) — jobs `images` e `binaries`.
+- [`.goreleaser.yaml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.goreleaser.yaml) — build de binários nativos.
+- [`action.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/action.yml) — GitHub Action composite que envolve a imagem `:full`.
 
 ---
 
@@ -177,7 +177,7 @@ Pipeline:
 1. **Checkout** com `fetch-depth: 0` (GoReleaser precisa do histórico completo para o changelog).
 2. **Setup Go 1.26**.
 3. **Install cosign**.
-4. **GoReleaser** (`goreleaser/goreleaser-action@v6`, `version: "~> v2"`, `args: release --clean`) — conforme [`.goreleaser.yaml`](../.goreleaser.yaml):
+4. **GoReleaser** (`goreleaser/goreleaser-action@v6`, `version: "~> v2"`, `args: release --clean`) — conforme [`.goreleaser.yaml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/.goreleaser.yaml):
    - Builds `CGO_ENABLED=0`, `-trimpath`, `ldflags -s -w -X main.version={{.Version}}`.
    - Matriz `goos: [linux, darwin, windows]` x `goarch: [amd64, arm64]`.
    - Archives `quorum_<version>_<os>_<arch>` (zip no Windows) incluindo `README.md`, `README.pt-BR.md`, `LICENSE` e o diretório `crosswalk/**`.
@@ -240,7 +240,7 @@ gh attestation verify oci://ghcr.io/martinez1991/quorum-sec-scan:slim \
   --repo Martinez1991/quorum-sec-scan
 ```
 
-A própria [`action.yml`](../action.yml) faz isso automaticamente: por padrão (`verify: true`) ela **cosign-verifica** `ghcr.io/martinez1991/quorum-sec-scan:full` (instalando o cosign se preciso) antes de executar a imagem via `docker run`. Recomenda-se fixar a imagem por `@sha256:...` em produção (input `image`).
+A própria [`action.yml`](https://github.com/Martinez1991/quorum-sec-scan/blob/main/action.yml) faz isso automaticamente: por padrão (`verify: true`) ela **cosign-verifica** `ghcr.io/martinez1991/quorum-sec-scan:full` (instalando o cosign se preciso) antes de executar a imagem via `docker run`. Recomenda-se fixar a imagem por `@sha256:...` em produção (input `image`).
 
 Binário (a partir de um release):
 
@@ -346,4 +346,4 @@ flowchart LR
 
 ---
 
-Ver também: [README.md](../README.md) · [README.pt-BR.md](../README.pt-BR.md) · [DESIGN.md](../DESIGN.md) (supply chain §12, status de scanner §14).
+Ver também: [README.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.md) · [README.pt-BR.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/README.pt-BR.md) · [DESIGN.md](https://github.com/Martinez1991/quorum-sec-scan/blob/main/DESIGN.md) (supply chain §12, status de scanner §14).
